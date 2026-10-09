@@ -179,6 +179,6 @@ camera-relative (FLOATING ORIGIN: the three.js camera is always at the origin, o
 - Phase 1 leftovers: menu rocket is a placeholder; `renderer.info.memory` read as zeros; no service worker (no offline play); no LICENSE file (the owner has not chosen one); the dev server shows a stale version string until restarted (the define reads package.json once).
 
 ## 9. Deploy status
-- Repo: https://github.com/Coder-4847/Orbital (public), branch `main`, tag `v1.0.0`, pushed 2026-10-09. Expected site: https://coder-4847.github.io/Orbital/
-- The first Actions run built and tested fine (npm ci on Linux, 270 tests, build, artifact). The **deploy step failed because Pages was not enabled**: the owner must set Settings > Pages > Source to "GitHub Actions" and re-run the failed job (Claude could not: not signed in to GitHub, `gh` not installed). Update this section once the site is confirmed live.
-- `dist/` is about 2.8 MB (three.js chunk 961 kB, app 33 kB + scene chunks, data 1.4 MB, fonts 90 kB); verified from `/orbital/` including workers, data and fonts. Relative base, so the repository name needs no configuration.
+- **Live:** https://coder-4847.github.io/Orbital/ (verified 2026-10-09: page and all assets 200, the flight scene loads with terrain workers and data, no game errors in the console; the only 404 is the browser's automatic /favicon.ico request).
+- Repo: https://github.com/Coder-4847/Orbital (public), branch `main`, tag `v1.0.0`. Every push to `main` re-runs `.github/workflows/deploy.yml` (npm ci, 270 tests, build, deploy). Pages source is "GitHub Actions" (set by the owner).
+- `dist/` is about 2.8 MB (three.js chunk 961 kB, app 33 kB + scene chunks, data 1.4 MB, fonts 90 kB). Relative base, so the repository name needs no configuration.
