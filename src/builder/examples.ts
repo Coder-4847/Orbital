@@ -32,24 +32,23 @@ function sparrow(): Craft {
 
 /**
  * The rocket a new player flies first: orbit and back with fuel to spare. A capsule with both parachutes and a heat shield on
- * its own decoupler, a long 1.25 m upper stage, and a first stage with a modest thrust-to-weight (about 1.25), so the climb is
- * slow enough to steer by hand. A hand-flown ascent with late, coarse steering still reaches orbit (tests/guide.test.ts).
+ * its own decoupler, a 2.5 m upper stage with a powerful vacuum engine and a three-tank first stage with a modest thrust-to-weight,
+ * so the climb is slow enough to steer by hand and there are several tonnes of fuel to spare at orbit. A hand-flown ascent with late, coarse steering still reaches orbit (tests/guide.test.ts).
  */
 function pathfinder(): Craft {
   const { craft, root } = startCraft('Pathfinder trainer', 'pod-capsule');
   above(craft, above(craft, root, 'chute-main'), 'chute-drogue');
   const shield = below(craft, root, 'shield-125');
   const dropCapsule = below(craft, shield, 'dec-125'); // the capsule comes home alone
-  const upper1 = below(craft, dropCapsule, 'tank-125-4');
-  const upper2 = below(craft, upper1, 'tank-125-2');
-  const upperEngine = below(craft, upper2, 'eng-vacuum-110');
-  const dec = below(craft, upperEngine, 'dec-125');
-  const widen = below(craft, dec, 'adapter-125-250');
-  const t1 = below(craft, widen, 'tank-250-8');
-  const t2 = below(craft, t1, 'tank-250-4');
-  const narrow = belowVia(craft, t2, 'adapter-125-250', 'bottom');
-  belowVia(craft, narrow, 'eng-sea-850', 'top', 'top');
-  radial(craft, t2, 'fin-large', 4, yOf(craft, t2) - 0.4);
+  const widen = below(craft, dropCapsule, 'adapter-125-250');
+  const upperTank = below(craft, widen, 'tank-250-8');
+  const upperEngine = below(craft, upperTank, 'eng-vac-600');
+  const dec = below(craft, upperEngine, 'dec-250');
+  const t1 = below(craft, dec, 'tank-250-8');
+  const t2 = below(craft, t1, 'tank-250-8');
+  const t3 = below(craft, t2, 'tank-250-8');
+  below(craft, t3, 'eng-booster-2500');
+  radial(craft, t3, 'fin-large', 4, yOf(craft, t3) - 0.4);
   return finish(craft);
 }
 

@@ -51,10 +51,10 @@ export function openHowToPlay(ctx: AppContext, initial: HelpTab = 'start'): Moda
       ['Climb straight up', 'for the first kilometre. SAS holds the nose steady for you.'],
       ['Lean over to the east.', 'Tap {pitchUp} a little at a time and watch Attitude on the right: about 60° at 10 km, 40° at 25 km, 20° at 45 km. Short taps, then let go.'],
       ['Stage when the engine dies.', 'Press {stage} to drop the empty stage and light the next. Keep burning.'],
-      ['Above 55 km, steer by Vertical speed.', 'While it is high, keep the nose just above the horizon (5 to 10°) so the thrust goes sideways. If it nears zero, raise the nose to 20 or 30° so you do not start to fall.'],
+      ['Above 55 km, hold your height.', 'The aim now is speed sideways, not height: the guide shows an angle that is near the horizon while you are still climbing and rises if you start to sink. Altitude should stay near 100 km. Watch Periapsis climb.'],
       ['Cut the engine', 'with {throttleCut} when Periapsis is above 85 km. You are in orbit.'],
     ),
-    p('The Flight guide does this arithmetic for you: it shows the angle to aim for at every moment. If the rocket flips over, you turned too hard while low and fast: use shorter taps. The starter rocket, Pathfinder, has fuel to spare; a rocket of your own needs about 9,400 m/s of delta-v.'),
+    p('The Flight guide does this arithmetic for you: it shows the angle to aim for at every moment. If the rocket flips over, you turned too hard while low and fast: use shorter taps. The starter rocket, Pathfinder, has several tonnes of fuel to spare; a rocket of your own needs about 9,400 m/s of delta-v. Watch Propellant: if it is nearly gone and Periapsis is still far below the target, restart from the pause menu and lean over earlier.'),
   );
 
   const screen = page(

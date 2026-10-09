@@ -2,6 +2,11 @@
 
 Newest first. One line per notable change.
 
+## 1.1.1 — The first orbit no longer runs out of fuel
+- Fixed: **players ran out of fuel on the periapsis step and could not reach orbit.** Two causes. (1) Above 55 km the guide asked for a nose angle that kept the rocket climbing at about 900 m/s instead of building sideways speed; it now holds the altitude near 110 km (`ascentPitch`: lower the nose while climbing fast, down to 5 degrees below the horizon, raise it when sinking). (2) Pathfinder had a weak 110 kN upper stage and only about 1 t of fuel to spare; it is now a 2.5 m rocket (Titan-2500 under three tanks, Vac-600 upper stage) with 4 to 7 t to spare for the careful, average and clumsy simulated players. In the browser, flown by a script that only reads the guide, the Pathfinder reaches an 86 x 600 km orbit.
+- The guide warns when fuel is almost gone and the orbit is not made, and says to restart; the orbit step needs the periapsis 3 km clear of the air so cutting the engine at once is safe; the descent step no longer flickers to "Re-entry" at touchdown.
+- Verified end to end in the browser: launch, orbit, then (from a teleported orbit) the retrograde burn, staging down to the capsule, re-entry, parachutes and touchdown with all four parts intact; Hangar to Launch, map, quick save and load, six preset switches, Explorer, Settings, About, and the WebGL 2 backend, with no console errors.
+
 ## 1.1.0 — Launch site, graphics and a guide to flying
 - Fixed: **the launch pad stood on a round sand island in the open sea.** The baked heightmap has one grey step per ~35 m and the bake treats anything under about 70 m as ocean, so Florida and the whole coastal plain of the south-east United States were missing; only the levelled disc under the pad stood above the water. `terrain/lowlands.ts` adds hand-traced outlines of low plains (Mobile to Virginia Beach, with Lake Okeechobee) that `EarthSource` turns into low, humid land with a fractal coast, dunes, lagoons and a proper shelf offshore. Other low coasts of the world are still missing (see MEMORY, section 8).
 - Fixed: **the launch complex was visible from space** (drawn out to 300 km, on a bright disc). It is now drawn within 60 km only, and its ground no longer contrasts with the land around it.

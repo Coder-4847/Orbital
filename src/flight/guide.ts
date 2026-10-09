@@ -21,6 +21,8 @@ export interface GuideState extends HintState {
   /** The vessel has been in a stable orbit at some point of this flight. */
   reachedOrbit: boolean;
   bodyName: string;
+  /** Propellant left as a fraction of the launch load (0..1). */
+  fuelLeft: number;
 }
 
 export const ASCENT_PHASES = ['Launch', 'Climb', 'Lean over', 'Gain speed', 'Orbit'] as const;
@@ -42,9 +44,15 @@ export interface GuideView {
 const PERIAPSIS_MARGIN = 5_000;
 /** Below this altitude the nose follows the altitude table; above it the air no longer matters and vertical speed is the guide. */
 export const STEER_BY_SPEED_ALTITUDE = 55_000;
+/** Up there the nose holds the altitude near HOLD_ALTITUDE: lower it while climbing, raise it when sinking. */
+export const HOLD_ALTITUDE = 110_000;
+export const HOLD_BASE = 6;
+export const HOLD_GAIN = 0.0008;
+export const HOLD_MIN = -5;
+const clamp = (x: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, x));
 
 /** Altitude (m) -> nose elevation (degrees) through the atmosphere: straight up for a kilometre, 60 at 10 km, 20 at 45 km. */
-const PITCH_TABLE: ReadonlyArray<readonly [number, number]> = [[1000, 90], [2000, 80], [10_000, 60], [25_000, 40], [45_000, 20], [60_000, 10]];
+export const PITCH_TABLE: ReadonlyArray<readonly [number, number]> = [[1000, 90], [2000, 80], [10_000, 60], [25_000, 40], [45_000, 20], [60_000, 10]];
 
 /**
  * Where the nose should point during the climb (degrees above the horizon, in steps of 5), from altitude (m) and vertical
@@ -52,7 +60,7 @@ const PITCH_TABLE: ReadonlyArray<readonly [number, number]> = [[1000, 90], [2000
  * while still rising fast, higher the closer the climb is to stalling.
  */
 export function ascentPitch(altitude: number, verticalSpeed: number): number {
-  if (altitude >= STEER_BY_SPEED_ALTITUDE) return verticalSpeed > 400 ? 5 : verticalSpeed > 150 ? 10 : verticalSpeed > 0 ? 20 : 30;
+  if (altitude >= STEER_BY_SPEED_ALTITUDE) return Math.round(clamp(HOLD_BASE + HOLD_GAIN * (HOLD_ALTITUDE - altitude) - 0.05 * verticalSpeed, HOLD_MIN, 25) / 5) * 5;
   if (altitude <= PITCH_TABLE[0]![0]) return 90;
   for (let i = 1; i < PITCH_TABLE.length; i++) {
     const [a1, p1] = PITCH_TABLE[i]!;
@@ -107,7 +115,7 @@ export function guide(s: GuideState, fmt: (metres: number) => string = km): Guid
   if (s.hasChutes && !s.chutesArmed && s.agl < 12_000 && s.speed < 500 && s.verticalSpeed < -20) {
     return home('chutes', 2, 'Open the parachutes', 'You are low and slow enough. Press {chutes} to arm the parachutes: they open by themselves when it is safe.', `${fmt(s.agl)} above the ground`);
   }
-  if (s.chutesArmed && s.verticalSpeed < 0 && s.altitude < 15_000) {
+  if ((s.chutesArmed || s.altitude < 3000) && s.verticalSpeed < 0 && s.altitude < 15_000) {
     return home('descent', 2, 'Under the canopy', 'Nothing left to do but ride it down: the main canopy opens near the ground and the capsule takes the touchdown.', `Falling at ${Math.round(-s.verticalSpeed)} m/s, ${fmt(s.agl)} to go`);
   }
   if (s.reachedOrbit) {
@@ -126,7 +134,9 @@ export function guide(s: GuideState, fmt: (metres: number) => string = km): Guid
     return ascent('spent', 3, 'Out of fuel', 'The tanks are empty before reaching orbit, so this flight comes back down: arm the parachutes with {chutes} once you are low. Orbit needs about 9,400 m/s of delta-v, and the Hangar shows it for your design. Press {pause} to try again.', `Apoapsis ${fmt(Math.max(0, s.apoapsis))}`);
   }
 
-  const idle = s.throttle === 0 ? 'The engine is off: press {throttleFull}. ' : '';
+  // The one thing nothing else tells a player: fuel is nearly gone and the orbit is not made. Say so before it is too late to matter.
+  const lowFuel = s.fuelLeft < 0.1 && s.thrust > 0;
+  const idle = (s.throttle === 0 ? 'The engine is off: press {throttleFull}. ' : '') + (lowFuel ? 'Fuel is almost gone: if Periapsis is still far below the target, this flight will not reach orbit. Press {pause} and restart, aiming for a flatter climb. ' : '');
   if (s.altitude < 1000) {
     return ascent('climb', 1, 'Climb straight up', `${idle}Hands off for the first kilometre: SAS keeps the nose up while you gain speed.`, `${fmt(s.altitude)} up at ${Math.round(s.speed)} m/s`, Math.min(1, s.altitude / 1000));
   }
@@ -143,7 +153,7 @@ export function guide(s: GuideState, fmt: (metres: number) => string = km): Guid
       `${fmt(s.altitude)} up · aim for ${want}°`, Math.min(1, s.altitude / STEER_BY_SPEED_ALTITUDE),
     );
   }
-  const why = s.verticalSpeed <= 0 ? 'You are falling: nose up until Vertical speed is positive again.' : s.verticalSpeed > 150 ? 'You are still climbing fast, so nearly all the thrust can go sideways.' : 'Vertical speed is low: keep the nose a little above the horizon so you do not start to fall.';
+  const why = s.verticalSpeed <= 0 ? 'You are sinking: raise the nose until Vertical speed is positive again.' : s.verticalSpeed > 150 ? 'You are still climbing fast, so nearly all the thrust can go sideways.' : 'Vertical speed is low: hold the nose steady so you neither climb nor sink.';
   return ascent(
     'speed', 3, 'Gain speed for orbit',
     `${idle}${steer} ${why} Keep burning until Periapsis is above ${fmt(peTarget)}, then cut the engine with {throttleCut}.`,

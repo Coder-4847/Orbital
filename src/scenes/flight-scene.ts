@@ -468,7 +468,8 @@ export class FlightScene implements GameScene {
       everLiftedOff: this.everLiftedOff,
     });
     this.enteredSoi = false;
-    this.guide.update(this.world, s, this.map.active);
+    const fuel = this.world.active?.parts.reduce((t, p) => t + (p.def.propellant?.kind === 'solid' ? 0 : p.fuel), 0) ?? 0;
+    this.guide.update(this.world, s, this.map.active, fuel / this.initialFuel);
     this.hud.setGuideOn(this.guide.enabled);
     const id = s ? nextHint(s) : null;
     if (id) {

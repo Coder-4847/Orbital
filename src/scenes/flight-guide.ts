@@ -40,11 +40,11 @@ export class FlightGuide {
   }
 
   /** `hint` is null when there is no vessel left to guide. */
-  update(world: FlightWorld, hint: HintState | null, mapOpen: boolean): void {
-    const s = hint ? guideState(world, hint, this.reachedOrbit) : null;
+  update(world: FlightWorld, hint: HintState | null, mapOpen: boolean, fuelLeft: number): void {
+    const s = hint ? guideState(world, hint, this.reachedOrbit, fuelLeft) : null;
     this.panel.show(this.enabled && !!s && !mapOpen);
     if (!s) return;
-    if (s.bodyId !== 'earth' || (s.periapsis > s.atmosphereTop && Number.isFinite(s.apoapsis) && s.apoapsis > s.periapsis)) this.reachedOrbit = true;
+    if (s.bodyId !== 'earth' || (s.periapsis > s.atmosphereTop + 3000 && Number.isFinite(s.apoapsis) && s.apoapsis > s.periapsis)) this.reachedOrbit = true;
     if (s.situation === 'rest' && !s.everLiftedOff) this.reachedOrbit = false;
     const units = this.ctx.settings.get().gameplay.units;
     // Whole kilometres read better in a sentence than the HUD's "100.0 km".

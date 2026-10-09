@@ -14,7 +14,7 @@ const base: GuideState = {
   altitude: 12, agl: 8, speed: 0, verticalSpeed: 0, apoapsis: 12, periapsis: -6.36e6, atmosphereTop: 80_000,
   throttle: 0, thrust: 0, stageWaiting: true, hullHeat: 0, hasChutes: true, chutesArmed: false, hasLegs: false, legsOut: false,
   mapOpen: false, hasNode: false, nodeSoon: false, enteredSoi: false, atRealTime: true, everLiftedOff: false,
-  pitchDeg: 90, timeToApoapsis: 0, reachedOrbit: false,
+  pitchDeg: 90, timeToApoapsis: 0, reachedOrbit: false, fuelLeft: 1,
 };
 const at = (over: Partial<GuideState>) => guide({ ...base, ...over });
 const flying: Partial<GuideState> = { situation: 'flying', everLiftedOff: true, throttle: 1, thrust: 8e5, met: 30 };
@@ -35,13 +35,15 @@ describe('flight guide', () => {
     expect(high.text).toContain('60°');
     expect(at({ ...flying, altitude: 10_000, speed: 400, verticalSpeed: 350, pitchDeg: 40 }).text).toContain('{pitchDown}');
     expect(at({ ...flying, altitude: 10_000, speed: 400, verticalSpeed: 350, pitchDeg: 62 }).text).toContain('Hands off');
-    expect(at({ ...flying, altitude: 90_000, speed: 3000, verticalSpeed: -40, pitchDeg: 5 }).text).toContain('falling');
+    expect(at({ ...flying, altitude: 90_000, speed: 3000, verticalSpeed: -40, pitchDeg: 5 }).text).toContain('sinking');
   });
 
   it('notices burnout, empty tanks and an engine left off', () => {
     expect(at({ ...flying, altitude: 60_000, thrust: 0, stageWaiting: true }).id).toBe('stage');
     expect(at({ ...flying, altitude: 60_000, thrust: 0, stageWaiting: false }).id).toBe('spent');
     expect(at({ ...flying, altitude: 20_000, throttle: 0, thrust: 0, pitchDeg: 45 }).text).toContain('The engine is off');
+    expect(at({ ...flying, altitude: 90_000, pitchDeg: 10, fuelLeft: 0.05 }).text).toContain('Fuel is almost gone');
+    expect(at({ ...flying, altitude: 90_000, pitchDeg: 10, fuelLeft: 0.5 }).text).not.toContain('Fuel is almost gone');
   });
 
   it('brings the player home once they have been in orbit', () => {
@@ -50,6 +52,7 @@ describe('flight guide', () => {
     expect(at({ ...back, altitude: 60_000, speed: 7000, verticalSpeed: -200 }).id).toBe('reentry');
     expect(at({ ...back, altitude: 9000, agl: 9000, speed: 250, verticalSpeed: -200 }).id).toBe('chutes');
     expect(at({ ...back, altitude: 4000, agl: 4000, speed: 60, verticalSpeed: -50, chutesArmed: true }).id).toBe('descent');
+    expect(at({ ...back, altitude: 800, agl: 800, speed: 15, verticalSpeed: -10, hasChutes: false }).id).toBe('descent');
     expect(at({ ...back, situation: 'rest', altitude: 3, agl: 0, speed: 0 }).id).toBe('landed');
   });
 
@@ -82,7 +85,10 @@ describe('flight guide', () => {
     }
     expect(ascentPitch(500, 100)).toBe(90);
     expect(ascentPitch(10_000, 300)).toBe(60);
+    // up high the nose holds the altitude: down while climbing fast, up when sinking
     expect(ascentPitch(90_000, -10)).toBeGreaterThan(ascentPitch(90_000, 600));
+    expect(ascentPitch(110_000, 0)).toBeLessThanOrEqual(10);
+    expect(ascentPitch(80_000, 900)).toBe(-5); // still climbing hard: the nose goes just below the horizon
   });
 });
 
@@ -131,7 +137,7 @@ describe('the starter rocket and the guide together', () => {
   it('the starter rocket is forgiving on paper', () => {
     const s = computeStats(starterCraft());
     expect(s.twrSL).toBeGreaterThan(1.15);
-    expect(s.twrSL).toBeLessThan(1.5);
+    expect(s.twrSL).toBeLessThan(1.8);
     expect(s.dvVac).toBeGreaterThan(10_500);
     expect(s.stabilityMargin ?? 0).toBeGreaterThan(0);
   });
@@ -140,10 +146,10 @@ describe('the starter rocket and the guide together', () => {
     ['a careful player', 4, 0.4, 0.15],
     ['an average player', 6, 0.6, 0.25],
     ['a slow, heavy-handed player', 10, 1.5, 0.25],
-  ])('%s following the guide reaches orbit with the engine stage still attached', (_name, band, react, tap) => {
+  ])('%s following the guide reaches orbit with plenty of fuel left', (_name, band, react, tap) => {
     const out = flyByGuide(band, react, tap);
     expect(out.why).toBe('');
     expect(out.orbit).toBe(true);
-    expect(out.fuel).toBeGreaterThan(100);
+    expect(out.fuel).toBeGreaterThan(2000); // several tonnes to spare, so a bad launch is still a recoverable one
   }, 120_000);
 });
