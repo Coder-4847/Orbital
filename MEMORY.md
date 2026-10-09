@@ -4,7 +4,7 @@ Single source of truth between sessions. Read first; update after every meaningf
 
 ## 1. Project summary
 Orbital is a browser-based 3D spaceflight simulator: build rockets in a Hangar, launch from a real-scale Earth, reach orbit, plan
-patched-conic trajectories on a map, travel the real solar system. Pure static web app (no backend), deployed to GitHub Pages in Phase 8.
+patched-conic trajectories on a map, travel the real solar system. Pure static web app (no backend), built to deploy on GitHub Pages (repo Coder-4847/Orbital).
 The full spec is the "ORBITAL — Master Prompt" the user supplied (8 phases). Work one phase at a time; stop and report after each; wait for "continue".
 
 ## 2. Tech stack and versions
@@ -40,7 +40,7 @@ Deploy: push to `main` on GitHub with Pages source set to "GitHub Actions"; the 
 index.html            boot splash (#boot), #app (canvas), #ui-root (DOM UI), test hook for ?raf=timer
 vite.config.ts        base from ORBITAL_BASE (default './'), __APP_VERSION__ define, vitest config
 src/main.ts           boot: settings -> Gfx.create -> GameLoop -> AppContext -> SceneManager -> menu
-src/core/             events, store, loop (GameLoop: fixed 120 Hz accumulator + frame cap, stats), scene-manager (GameScene, AppContext, fades),
+src/core/             keymap (flight actions + default key bindings, rebinding), units (metric/imperial formatting), events, store, loop (GameLoop: fixed 120 Hz accumulator + frame cap, stats), scene-manager (GameScene, AppContext, fades),
                       time (UT <-> date, J2000), apply-settings, ephemeris-lite (Earth spin, Sun, circular Moon: REPLACED in Phase 3)
 src/data/quality.ts   Low/Medium/High/Ultra preset values (pure data)
 src/terrain/          PURE (no three): cube-sphere (faces, nodes, keys, lon/lat), noise (simplex3, fbm), types, sampling (equirect raster),
@@ -53,20 +53,23 @@ src/render/           gfx (renderer, RenderPipeline: MSAA scene pass -> compose 
                       atmosphere-lighting (sun colour + sky ambient at a point), atmosphere-pass (full-screen ray march + clouds composite),
                       clouds (procedural cloud shell), terrain-material (Earth + Moon shaders), detail-texture, raster-texture, planet-uniforms,
                       planet (double-precision pose + floating origin placement), planetary-system (Earth + Moon + pool + LUT + atmosphere),
-                      sky-backdrop (stars, Milky Way, true-size Sun), starfield, demo-rocket, dispose, gpu-name;
+                      sky-backdrop (stars, Milky Way, true-size Sun), starfield, demo-rocket, dispose, gpu-name (+ suggestPreset), uploaded (has the renderer uploaded this attribute);
                       Phase-1 menu backdrop only (not used by the explorer): space-view, earth-lite, atmosphere, sun
 src/flight/           EXPLORER: free-camera, teleport, debug-overlay, map-view, time-panel, presets, exposure.
                       FLIGHT PHYSICS (pure, no three): math3, atmosphere (US-1976 `earthAir`, Mach drag), env (FlightEnv: mu, radius, spin, air, planetQuat, groundRadius, sunDir),
                       vessel (FlightPart/Vessel, buildVessel from a Craft, mass/inertia, carve/splitDisconnected), aero, propulsion, sas, contact (ground), structure (joint loads),
                       flight-ops (staging, chutes, legs, power, destruction), flight-world (FlightWorld: launch/stage/step), orbit-info, earth-env (adapter from SolarSystem/Planet).
                       PHASE 6 NAVIGATION (pure): body-env (FlightEnv for every body from the ephemeris + a BodyHost for ground height; AIR_MODELS incl. gas giants; CRUSH_PRESSURE), trajectory (patched conics, SOI events, closestApproach), maneuver (nodes, burn frame, burnEstimate),
-                      navigator (nodes, prediction cache, markers, rails stepping with SOI hand-over, remainingBurn from delivered dv, patchAnchors), warp (ladder + warp-to), heating (re-entry), guidance (burn guidance, orbit cheat), format-time.
+                      navigator (nodes, prediction cache, markers, rails stepping with SOI hand-over, remainingBurn from delivered dv, patchAnchors), warp (ladder + warp-to), heating (re-entry), guidance (burn guidance), relocate (cheat teleports and clock jumps), format-time.
                       FLIGHT RENDER/UI: plume, vessel-view, effects, pad (LaunchPad), flight-camera, flight-input (keyboard + gamepad), navball(-math), hud, flight-commands, flight-lighting, scene-lighting (per-body light + exposure), exhaust, plasma (re-entry glow), flight-map + node-panel (map overlay, markers, node editor; uses MapView with a 'vessel' focus).
 src/audio/            audio-manager (AudioContext, master + effects/ambience/music buses, UI and event one-shots), music (generative ambient music), engine-sound, ui-sounds (event delegation), event-sounds
-src/scenes/           menu-scene, hangar-scene (Phase 4 builder), flight-scene (Phase 5 FlightScene, id 'flight'), explorer-scene (Phase 2/3 free camera + map, id 'explorer')
+src/scenes/           menu-scene, hangar-scene (Phase 4 builder), flight-scene (FlightScene, id 'flight'; integration only), explorer-scene (free camera + map, id 'explorer');
+                      flight helpers split out of flight-scene: flight-saves (autosave/quicksave/load), flight-cheats (cheat flags + actions), flight-diagnostics (debug overlay data), flight-depth (camera near/far), flight-time (physics steps / rails), flight-events (HUD messages, particles, sounds), flight-readouts (warp text, navball markers, sound levels)
 src/ui/               kit/ (dom, controls, modal, tooltip), menu/ (main menu, dialogs, save-manager), settings/ (panel + controls-panel with key rebinding), cheats/, flight/ (pause menu, key reference), hint-card, styles/, scene-chrome, fatal
-src/save/             settings (localStorage), db (IndexedDB), saves (SaveRepository)
+src/save/             settings (localStorage, schema 2), cheats (CheatStore), db (IndexedDB), saves (SaveRepository + migrations), flight-state (capture/restore of a flight, pure)
 tools/                bake-earth-data.py, bake-lights.py
+docs/screenshots/     README images
+.github/workflows/    deploy.yml (test, build, publish to GitHub Pages on push to main)
 tests/                settings, saves, core, gpu-name, cube-sphere, terrain-sources, chunk-builder, terrain-seams, lod, atmosphere-model, ephemeris-lite
 ```
 Flow (explorer): `FlightScene.update` -> free camera moves (double-precision position) -> reference-frame anchoring (camera glued to nearest body's
@@ -75,13 +78,13 @@ camera-relative (FLOATING ORIGIN: the three.js camera is always at the origin, o
 `AtmospherePass.compose` (reads depth) -> exposure -> bloom -> tone map.
 
 ## 5. Current phase and status
-- **Phases 1–3: DONE** (see CHANGELOG). **Phase 4 — Rocket builder (Hangar): DONE** (awaiting user "continue"): src/builder/ (pure model + editor + stats) and the Hangar scene.
+- **Phases 1–3: DONE** (see CHANGELOG). **Phase 4 — Rocket builder (Hangar): DONE** : src/builder/ (pure model + editor + stats) and the Hangar scene.
 - **Phase 4 architecture:** `part-types/part-library` (data, 51 parts), `craft` (instances, nodes, attachment maths, tree, serialization), `edit` (placement + radial symmetry, rotate/offset, copy/paste), `snap` (node/side snapping from a pointer ray),
   `staging` (segments cut at decouplers, auto-staging, manual stage edits), `stats` (mass, CoM/CoP, staged burn simulation -> delta-v/TWR), `history` (JSON snapshots), `limits` (hangar limits + advice), `craft-store` (IndexedDB `crafts` store, JSON import/export),
   `examples`, `compose` (build crafts in code), `editor` (HangarEditor session: tools, preview/commit, selection, undo, autosave; NO DOM/three), `format`. Render/UI: `part-meshes` (PartFactory, procedural PBR), `hangar-view`, `hangar-panels`, `hangar-dialogs`, `scenes/hangar-scene`, `ui/styles/hangar.css`.
-- **Phase 5 — Launch and atmospheric flight: DONE** (awaiting user "continue"). The Hangar's Launch button opens FlightScene with the autosaved craft (or the Sparrow example). A scripted pilot (tests/helpers/autopilot.ts) flies the Sparrow to orbit using only player-level controls; an unfinned rocket tumbles and breaks; an under-powered one stays on the pad.
-- **Phase 6 — Orbital navigation, maneuvers, interplanetary travel: DONE** (awaiting user "continue"). `tests/moon-mission.test.ts` flies the whole Moon round trip with a scripted pilot (helpers in tests/helpers/mission.ts and transfer.ts); Mars entry and gas-giant crush are tested; Selene reaches orbit from the pad in flight-orbit.test.ts.
-- **Phase 7 — Saves, settings, cheats, audio, polish: DONE** (awaiting user "continue"). Saves/quick save/autosave/export-import with thumbnails, key rebinding, cheats menu, procedural audio and music, hints, pause menu, loading card, shadows, units.
+- **Phase 5 — Launch and atmospheric flight: DONE** . The Hangar's Launch button opens FlightScene with the autosaved craft (or the Sparrow example). A scripted pilot (tests/helpers/autopilot.ts) flies the Sparrow to orbit using only player-level controls; an unfinned rocket tumbles and breaks; an under-powered one stays on the pad.
+- **Phase 6 — Orbital navigation, maneuvers, interplanetary travel: DONE** . `tests/moon-mission.test.ts` flies the whole Moon round trip with a scripted pilot (helpers in tests/helpers/mission.ts and transfer.ts); Mars entry and gas-giant crush are tested; Selene reaches orbit from the pad in flight-orbit.test.ts.
+- **Phase 7 — Saves, settings, cheats, audio, polish: DONE** . Saves/quick save/autosave/export-import with thumbnails, key rebinding, cheats menu, procedural audio and music, hints, pause menu, loading card, shadows, units.
 - **Phase 8 — Optimisation, testing, release: DONE** (v1.0.0; all eight phases finished). Nothing is planned; new work would be bug fixes or the gaps listed in section 8.
 - **Phase 8 notes:** memory (terrain chunks free their CPU vertex arrays after upload via `uploaded()` + `TerrainBody.releaseUploaded`; Earth chunks omit `aSurfB`), three.js split into its own chunk (`vite.config.ts` `advancedChunks`), first-run preset from the GPU (`suggestPreset`), `flight-scene.ts` helpers (`flight-depth/time/events/readouts.ts`), README screenshots in `docs/screenshots/` (canvas captures through `Gfx.capture(width)` posted to a throwaway local server; UI shots from the pane).
 - **Phase 8 lessons (keep):** (1) a TSL `opacityNode` REPLACES `material.opacity`: multiply `materialOpacity` back in when you animate opacity; (2) WebGPU rejected a frame ("texture depth used as attachment and binding", black screen that persisted) when the sun's shadow map was resized/enabled in the same moment MSAA was switched on: replace the light when the map size changes and defer shadow changes (`FlightScene.qualityTimer`); always stress preset switching (`applyPreset` high/low/medium/ultra in sequence) and count `console.error` after touching the render pipeline or lights; (3) `Gfx.exposure` is shared by all scenes: `clearView()` resets it to 1; (4) git-bash rewrites an argument like `/orbital/` into a Windows path: set `MSYS_NO_PATHCONV=1`; (5) never `cd` the persistent shell into a subfolder (the working directory follows it).
@@ -111,7 +114,7 @@ camera-relative (FLOATING ORIGIN: the three.js camera is always at the origin, o
 - **Frame/axes**: inertial = three.js world axes: +Y ecliptic north, +X vernal equinox J2000, ecliptic longitude increases toward -Z. Body-fixed: +Y north pole, +X lon 0, east toward -Z.
   Earth orientation = Rx(-obliquity) * Ry(GMST). Moon is tidally locked (+X faces Earth).
 - Settings UI exposes only options that do something: terrain detail and atmosphere quality are now exposed; shadowQuality/particleScale stay hidden until used.
-- Did not `git init` (user hasn't asked); Phase 8 covers GitHub.
+- `git init` was only run in Phase 8, when the user gave the repo URL (https://github.com/Coder-4847/Orbital.git): one commit "Orbital 1.0.0" on `main`, tag `v1.0.0`. Commits made after that follow normal git practice.
 
 - **Phase 3 decisions:** planets = JPL Standish (valid 1800–2050, degrade outside); Moon = mean elements + Meeus longitude terms (~0.3 deg; latitude terms not modelled); other moons = mean Keplerian elements, phase not ephemeris-exact.
   One atmosphere is active at a time (largest angular size). Venus uses an opaque deck shell (a volumetric opaque deck is missed by the ray march). Exposure model in flight/exposure.ts (pure, tested) scales with sunlight at the body's distance; teleports snap exposure.
@@ -176,4 +179,6 @@ camera-relative (FLOATING ORIGIN: the three.js camera is always at the origin, o
 - Phase 1 leftovers: menu rocket is a placeholder; `renderer.info.memory` read as zeros; no service worker (no offline play); no LICENSE file (the owner has not chosen one); the dev server shows a stale version string until restarted (the define reads package.json once).
 
 ## 9. Deploy status
-Not yet pushed to GitHub (the user does that; no `git init` was run). Ready: workflow, `.nojekyll`, relative base. `dist/` builds (about 2.5 MB: three.js chunk 961 kB, app 33 kB + scene chunks, data 1.4 MB, fonts 90 kB) and was verified again at 1.0.0 from `/orbital/` including workers, data and fonts. The tag `v1.0.0` is created by the user with the commands in the README.
+- Repo: https://github.com/Coder-4847/Orbital (public), branch `main`, tag `v1.0.0`, pushed 2026-10-09. Expected site: https://coder-4847.github.io/Orbital/
+- The first Actions run built and tested fine (npm ci on Linux, 270 tests, build, artifact). The **deploy step failed because Pages was not enabled**: the owner must set Settings > Pages > Source to "GitHub Actions" and re-run the failed job (Claude could not: not signed in to GitHub, `gh` not installed). Update this section once the site is confirmed live.
+- `dist/` is about 2.8 MB (three.js chunk 961 kB, app 33 kB + scene chunks, data 1.4 MB, fonts 90 kB); verified from `/orbital/` including workers, data and fonts. Relative base, so the repository name needs no configuration.
