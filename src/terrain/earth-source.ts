@@ -1,4 +1,5 @@
 import { LAUNCH_SITES, PAD_BLEND_RADIUS, PAD_FLAT_RADIUS } from '../data/sites';
+import { lowlandDistance } from './lowlands';
 import { Simplex3, clamp, mix, smoothstep } from './noise';
 import { sampleRaster, type Raster8 } from './sampling';
 import type { SurfaceSample, TerrainSource } from './types';
@@ -16,6 +17,8 @@ export interface EarthData {
 
 export const EARTH_RADIUS = 6_371_000;
 const MAX_ELEVATION = 8848;
+/** Half-width (km) of the band over which a lowland outline turns from sea to land; the coast's fractal jitter lives inside it. */
+const LOW_COAST_KM = 10;
 
 /** Unit directions of the launch pads, whose ground is levelled so a rocket (and its pad) can stand on it. */
 const PADS = LAUNCH_SITES.map((s) => {
@@ -49,7 +52,16 @@ export class EarthSource implements TerrainSource {
     const minWl = Math.max(2 * spacing, 0.4);
 
     const e = sampleRaster(this.data.elevation, lon, lat) / 255;
-    const coverage = sampleRaster(this.data.land, lon, lat) / 255;
+    let coverage = sampleRaster(this.data.land, lon, lat) / 255;
+    let dataH = e * MAX_ELEVATION;
+
+    // Coastal plains too low for the heightmap (see lowlands.ts): their outline supplies the coast, and the ground rises
+    // gently inland from a metre or two at the shore.
+    const lowKm = lowlandDistance((lon * 180) / Math.PI, (lat * 180) / Math.PI);
+    if (lowKm > -LOW_COAST_KM) {
+      coverage = Math.max(coverage, clamp(0.5 + lowKm / (2 * LOW_COAST_KM), 0, 1));
+      if (lowKm > 0) dataH = Math.max(dataH, 1.5 + 30 * smoothstep(0, 90, lowKm));
+    }
 
     // The coastline is the iso-contour coverage = theta (0.5 reproduces the real coast sub-pixel). The fractal jitter
     // of theta gives natural, scale-free wiggles; far from the coast coverage is 0 or 1, so it cannot create islands.
@@ -57,7 +69,9 @@ export class EarthSource implements TerrainSource {
     const theta = 0.5 + 0.13 * coastJitter;
     // Land rises from sea level at the coastline: height eases in over the first third of a pixel of coverage.
     const edge = smoothstep(theta, theta + 0.3, coverage);
-    const landH = coverage > theta ? Math.max(e * MAX_ELEVATION * edge, 0.4) : 0;
+    // A lowland shore climbs to a few metres within a kilometre (dunes), instead of staying awash for the width of the data's coast ramp.
+    const dune = lowKm > -LOW_COAST_KM ? 3.4 * smoothstep(theta, theta + 0.04, coverage) : 0;
+    const landH = coverage > theta ? Math.max(dataH * edge, dune, 0.4) : 0;
 
     let height = 0;
     let elevation = 0;
@@ -92,7 +106,7 @@ export class EarthSource implements TerrainSource {
     }
     const water = height === 0 && !padLevelled;
     if (water && landH <= 0) {
-      const coastKm = (sampleRaster(this.data.coast, lon, lat) / 255) * 2550;
+      const coastKm = Math.min((sampleRaster(this.data.coast, lon, lat) / 255) * 2550, Math.max(0, -lowKm));
       const shelfWidth = 0.55 + 0.9 * (0.5 + 0.5 * this.climateNoise.fbm(px, py, pz, 900000, 100000, 0.5, 4)); // steep vs gentle coasts
       const d = coastKm / shelfWidth;
       const floorNoise = this.detailNoise.fbm(px, py, pz, 500000, Math.max(minWl, 2000), 0.55, 10);
@@ -109,7 +123,9 @@ export class EarthSource implements TerrainSource {
     const tropics = 0.75 * Math.exp(-((absLatDeg / 12) ** 2));
     const temperate = 0.42 * Math.exp(-(((absLatDeg - 52) / 16) ** 2));
     const mNoise = this.climateNoise.fbm(px + 1e6, py - 3e6, pz + 2e6, 1_800_000, 80000, 0.5, 5);
-    const moisture = clamp(0.1 + tropics + temperate + mNoise * 0.45 - 0.05 * elevKm, 0, 1);
+    // The plains in lowlands.ts are humid subtropical coast, which the latitude model would paint as desert.
+    const humid = 0.5 * smoothstep(-LOW_COAST_KM, 4, lowKm);
+    const moisture = clamp(0.1 + tropics + temperate + humid + mNoise * 0.45 - 0.05 * elevKm, 0, 1);
 
     let ice = 0;
     if (!water) ice = smoothstep(0.2, 0.09, temperature);

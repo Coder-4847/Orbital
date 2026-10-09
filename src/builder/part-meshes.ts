@@ -56,7 +56,8 @@ export class PartFactory {
     let m = this.materials.get(key);
     if (!m) {
       const spec = MATERIALS[key];
-      m = new MeshStandardNodeMaterial({ color: new Color(spec.color), metalness: spec.metalness, roughness: spec.roughness, side: key === 'solar' ? DoubleSide : undefined });
+      m = new MeshStandardNodeMaterial({ color: new Color(spec.color), metalness: spec.metalness, roughness: spec.roughness });
+      if (key === 'solar') m.side = DoubleSide;
       if (spec.emissive !== undefined) m.emissive = new Color(spec.emissive);
       this.materials.set(key, m);
     }

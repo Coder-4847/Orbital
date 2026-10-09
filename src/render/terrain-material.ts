@@ -81,7 +81,11 @@ export function createEarthMaterial({ uniforms: u, lut, detail, lights }: EarthM
   const w = pow(abs(nLocal), vec3(4, 4, 4)) as V3;
   const weights = w.div(w.x.add(w.y).add(w.z)) as V3;
   const fade = (scale: number) => smoothstep(scale * 70, scale * 7, viewDist) as F;
-  const dCoarse = mix(float(0.5), triplanar(detail, detailCoord, weights, DETAIL_PERIOD / 8).r, fade(DETAIL_PERIOD / 8)) as F; // 256 m
+  // Two coarse scales that do not divide each other: their product only repeats every 2 km, so no grid shows from the air.
+  const coarseA = triplanar(detail, detailCoord, weights, DETAIL_PERIOD / 8).r as F; // 256 m
+  const coarseB = triplanar(detail, detailCoord, weights, DETAIL_PERIOD / 3).a as F; // 683 m
+  const coarseMix = mix(float(0.5), coarseA, smoothstep(7000, 1500, viewDist)).mul(0.55).add(mix(float(0.5), coarseB, smoothstep(16000, 4000, viewDist)).mul(0.45)) as F;
+  const dCoarse = coarseMix;
   const dMid = mix(float(0.5), triplanar(detail, detailCoord, weights, DETAIL_PERIOD / 128).g, fade(DETAIL_PERIOD / 128)) as F; // 16 m
   const dFine = mix(float(0.5), triplanar(detail, detailCoord, weights, DETAIL_PERIOD / 1024).b, fade(DETAIL_PERIOD / 1024)) as F; // 2 m
   const detailAlbedo = dCoarse.mul(0.55).add(0.725).mul(dMid.mul(0.4).add(0.8)).mul(dFine.mul(0.3).add(0.85)) as F;
@@ -96,10 +100,17 @@ export function createEarthMaterial({ uniforms: u, lut, detail, lights }: EarthM
   const rock = color(0x6a625a);
   const snow = color(0xd9dee5);
 
-  let land = mix(desert, steppe, smoothstep(0.1, 0.34, moist)) as V3;
-  land = mix(land, grass, smoothstep(0.3, 0.55, moist)) as V3;
-  land = mix(land, forest, smoothstep(0.5, 0.78, moist).mul(smoothstep(0.28, 0.5, temp))) as V3;
-  land = mix(land, rainforest, smoothstep(0.72, 0.95, moist).mul(smoothstep(0.62, 0.8, temp))) as V3;
+  // Vegetation is patchy at every scale: direction-based noise (stable from orbit, never tiles) shifts the moisture the
+  // biome is picked from by woods-and-fields sized patches (~25 km and ~3 km), so plains are not one flat colour.
+  const dirLand = normalize(u.bodyInverse.mul(vec4(up, 0)).xyz) as V3;
+  const patchFar = mx_fractal_noise_float(dirLand.mul(260), 3, 2.1, 0.55) as F;
+  const patchNear = mx_fractal_noise_float(dirLand.mul(2300), 3, 2.1, 0.55).mul(smoothstep(900000, 150000, viewDist)) as F;
+  const moistV = saturate(moist.add(patchFar.mul(0.16)).add(patchNear.mul(0.14))) as F;
+
+  let land = mix(desert, steppe, smoothstep(0.1, 0.34, moistV)) as V3;
+  land = mix(land, grass, smoothstep(0.3, 0.55, moistV)) as V3;
+  land = mix(land, forest, smoothstep(0.5, 0.78, moistV).mul(smoothstep(0.28, 0.5, temp))) as V3;
+  land = mix(land, rainforest, smoothstep(0.72, 0.95, moistV).mul(smoothstep(0.62, 0.8, temp))) as V3;
   land = mix(land, tundra, smoothstep(0.36, 0.17, temp)) as V3;
   const rockAmount = max(smoothstep(0.86, 0.64, cosSlope), smoothstep(float(1.8).add(temp.mul(3)), float(3.6).add(temp.mul(3)), elevKm)) as F;
   land = mix(land, rock, rockAmount) as V3;
@@ -107,7 +118,7 @@ export function createEarthMaterial({ uniforms: u, lut, detail, lights }: EarthM
   const snowPatch = smoothstep(0.18, 0.62, dCoarse.mul(0.7).add(dMid.mul(0.3)).add(ice.mul(0.35))) as F;
   const snowAmount = saturate(ice.mul(smoothstep(0.55, 0.85, cosSlope)).mul(snowPatch)) as F;
   land = mix(land, snow, snowAmount) as V3;
-  const beach = smoothstep(10, 0, elevM).mul(0.65) as F;
+  const beach = smoothstep(2.2, 0.5, elevM).mul(0.8) as F; // a strip of sand at the waterline, not the whole coastal plain
   land = mix(land, color(0xcdbd94), beach.mul(float(1).sub(snowAmount))) as V3;
   const landAlbedo = land.mul(detailAlbedo.mul(float(1).sub(snowAmount.mul(0.6)).add(snowAmount.mul(0.9)))) as V3;
 

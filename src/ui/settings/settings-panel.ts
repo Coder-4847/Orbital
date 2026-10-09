@@ -208,6 +208,7 @@ export function openSettings(ctx: AppContext): ModalHandle {
         (s) => s.gameplay.units,
       ),
     ),
+    field('Flight guide', 'A card in flight that always says what to do next, from the pad to orbit and back.', bind(toggle({ label: 'Flight guide', value: true, onChange: (v) => settings.patch('gameplay', { guide: v }) }), (s) => s.gameplay.guide)),
     field('Hints', 'Short tips that appear the first time something comes up.', bind(toggle({ label: 'Hints', value: true, onChange: (v) => settings.patch('gameplay', { hints: v }) }), (s) => s.gameplay.hints)),
     field('Show hints again', 'Forget which hints you have already seen.', button({ label: 'Reset hints', variant: 'quiet', onClick: () => { try { localStorage.removeItem(HINTS_KEY); } catch { /* storage blocked */ } dispatchEvent(new Event(RESET_HINTS_EVENT)); } })),
     field('Tooltips', 'Short explanations when hovering controls.', bind(toggle({ label: 'Tooltips', value: true, onChange: (v) => settings.patch('gameplay', { tooltips: v }) }), (s) => s.gameplay.tooltips)),

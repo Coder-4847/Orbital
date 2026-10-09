@@ -1,6 +1,7 @@
 /** The flight pause menu, and the read-only key reference it links to. */
 import { ACTIONS, keyLabel } from '../../core/keymap';
 import type { AppContext } from '../../core/scene-manager';
+import { openHowToPlay } from '../help/how-to-play';
 import { button } from '../kit/controls';
 import { h } from '../kit/dom';
 import { openModal, type ModalHandle } from '../kit/modal';
@@ -48,8 +49,9 @@ export function openPauseMenu(ctx: AppContext, a: PauseActions): ModalHandle {
       button({ label: 'Resume', variant: 'primary', onClick: close }),
       item('Save and load…', a.save),
       h('div', { class: 'pause-pair' }, item(`Quick save (${keyLabel(ctx.settings.get().controls.bindings.quicksave)})`, a.quicksave), item(`Quick load (${keyLabel(ctx.settings.get().controls.bindings.quickload)})`, a.quickload)),
-      item('Settings', a.settings),
+      item('How to play', () => openHowToPlay(ctx)),
       item('Controls', () => openKeyReference(ctx, a.settings)),
+      item('Settings', a.settings),
       item('Cheats', a.cheats),
       h('hr', { class: 'dialog-rule' }),
       item('Restart on the pad', a.restart),

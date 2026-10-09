@@ -1,9 +1,11 @@
 /** Gathers what the hint rules need to know about the flight (see hints.ts). */
 import { atmosphereTop } from './body-env';
-import { altitudeOf, surfaceVelocity } from './env';
+import { bodyDef } from '../data/solar-system';
+import { altitudeOf, horizon, surfaceVelocity } from './env';
 import type { FlightWorld } from './flight-world';
+import type { GuideState } from './guide';
 import type { HintState } from './hints';
-import { vdot, vlen, vnorm, vsub } from './math3';
+import { qrot, vdot, vlen, vnorm, vsub } from './math3';
 import { orbitInfo } from './orbit-info';
 import type { Navigator } from './navigator';
 
@@ -55,4 +57,15 @@ export function hintState(world: FlightWorld, nav: Navigator, x: HintExtras): Hi
     atRealTime: x.atRealTime,
     everLiftedOff: x.everLiftedOff,
   };
+}
+
+/** The hint state plus what the flight guide needs (see guide.ts). */
+export function guideState(world: FlightWorld, hint: HintState, reachedOrbit: boolean): GuideState | null {
+  const v = world.active;
+  if (!v) return null;
+  const env = world.env;
+  const orbit = orbitInfo(v.pos, v.vel, env.mu, env.radius, env.spinAxis);
+  const nose = qrot(v.q, [0, 1, 0]);
+  const pitch = Math.asin(Math.max(-1, Math.min(1, vdot(nose, horizon(env, v.pos).up))));
+  return { ...hint, pitchDeg: (pitch * 180) / Math.PI, timeToApoapsis: orbit.bound ? orbit.timeToApoapsis : Infinity, reachedOrbit, bodyName: bodyDef(world.bodyId).name };
 }

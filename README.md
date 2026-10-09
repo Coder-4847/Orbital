@@ -20,7 +20,7 @@ No server, no accounts, no downloads while you play: everything is bundled or ge
 - **A rocket builder** with 51 parts, symmetry, staging, live delta-v and thrust-to-weight, example crafts including a complete Moon mission.
 - **Flight physics.** 6-DOF vessels at 120 Hz, atmosphere and aerodynamics, gimbal, RCS, SAS, parachutes, landing legs, structural breakup, re-entry heating.
 - **Navigation.** Patched-conic trajectories, maneuver nodes, time warp on rails up to 100,000x, sphere-of-influence hand-overs, targets and closest approach.
-- **Saves, settings, cheats, sound.** Save slots with thumbnails, quick save, autosave, export and import; key rebinding; a cheats menu; synthesised engine sound and ambient music; first-time hints.
+- **Saves, settings, cheats, sound.** Save slots with thumbnails, quick save, autosave, export and import; key rebinding; a cheats menu; synthesised engine sound and ambient music; first-time hints, an always-on flight guide that says what to do next, and How to play pages.
 
 ## Run it
 

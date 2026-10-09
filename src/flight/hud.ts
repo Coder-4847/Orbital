@@ -27,6 +27,8 @@ export interface HudActions {
   pause(): void;
   mute(): void;
   toggleMap(): void;
+  toggleGuide(): void;
+  help(): void;
 }
 
 export interface HudState {
@@ -60,10 +62,34 @@ const SAS_MODES: Array<{ mode: SasMode; label: string; tip: string }> = [
   { mode: 'maneuver', label: 'Mnv', tip: 'Point along the maneuver burn' },
 ];
 
-const row = (label: string): { el: HTMLElement; value: HTMLElement } => {
+const row = (label: string, tip: string): { el: HTMLElement; value: HTMLElement } => {
   const value = h('span', { class: 'hud-value mono' });
-  return { el: h('div', { class: 'hud-row' }, h('span', { class: 'hud-label', text: label }), value), value };
+  return { el: h('div', { class: 'hud-row', tip }, h('span', { class: 'hud-label', text: label }), value), value };
 };
+
+const HUD_DETAIL_KEY = 'orbital.hud.detail';
+
+/** Readouts: id, label, what it means (tooltip), and whether it is in the short list shown by default. */
+const ROWS: ReadonlyArray<readonly [string, string, string, boolean]> = [
+  ['body', 'Near', 'The body whose gravity you are in. Altitude and the orbit are measured from it.', false],
+  ['alt', 'Altitude', 'Height above sea level.', true],
+  ['agl', 'Above ground', 'Height above the ground right under you. The one to watch when landing.', false],
+  ['vs', 'Vertical speed', 'How fast you are going up (+) or coming down (-).', true],
+  ['ap', 'Apoapsis', 'The highest point of your path. Burn prograde (the way you are going) to raise it.', true],
+  ['pe', 'Periapsis', 'The lowest point of your path. Above the atmosphere (80 km on Earth) means a stable orbit; negative means the path hits the ground.', true],
+  ['tap', 'To apoapsis', 'Time until you reach the highest point: the place to burn to raise the periapsis.', true],
+  ['tpe', 'To periapsis', 'Time until you reach the lowest point of your path.', false],
+  ['inc', 'Inclination', 'Tilt of your orbit against the equator.', false],
+  ['att', 'Attitude', 'Where the nose points: degrees above the horizon / compass heading (90 is east).', true],
+  ['q', 'Dynamic pressure', 'How hard the air pushes on the rocket, and your Mach number. Steer gently while it is high.', false],
+  ['heat', 'Hull heat', 'How close the hottest part is to burning up, during re-entry.', false],
+  ['g', 'Acceleration', 'The g-force you feel.', false],
+  ['twr', 'Thrust', 'Total push of the running engines.', false],
+  ['fuel', 'Propellant', 'Liquid fuel left in the whole rocket.', true],
+  ['ec', 'Charge', 'Electric charge: SAS needs it.', false],
+  ['met', 'Mission time', 'Time since lift-off.', false],
+  ['date', 'Date (UTC)', 'The date in the simulation. Time warp moves it on.', false],
+];
 
 export class FlightHud {
   readonly root = h('div', { class: 'flight-hud' });
@@ -83,9 +109,12 @@ export class FlightHud {
   private readonly nodeBanner = h('div', { class: 'hud-node mono' });
   private readonly cheatBadge = h('span', { class: 'hud-chip hud-cheat mono', text: 'CHEATS', tip: 'Cheats are switched on (Cheats menu)' });
   private readonly stageButton: HTMLButtonElement;
+  private readonly guideButton: HTMLButtonElement;
   private lastStageSig = '';
 
   constructor(actions: HudActions) {
+    this.guideButton = button({ label: 'Guide', variant: 'quiet', tip: 'Show or hide the flight guide: what to do next', onClick: () => actions.toggleGuide() }) as HTMLButtonElement;
+    this.guideButton.classList.add('hud-toggle');
     const toggle = (id: string, label: string, tip: string, on: () => void): HTMLButtonElement => {
       const b = button({ label, variant: 'quiet', tip, onClick: on }) as HTMLButtonElement;
       b.classList.add('hud-toggle');
@@ -139,37 +168,40 @@ export class FlightHud {
       ),
     );
 
-    const rows: Array<[string, string]> = [
-      ['body', 'Near'],
-      ['alt', 'Altitude'],
-      ['agl', 'Above ground'],
-      ['vs', 'Vertical speed'],
-      ['ap', 'Apoapsis'],
-      ['pe', 'Periapsis'],
-      ['tap', 'To apoapsis'],
-      ['tpe', 'To periapsis'],
-      ['inc', 'Inclination'],
-      ['att', 'Attitude'],
-      ['q', 'Dynamic pressure'],
-      ['heat', 'Hull heat'],
-      ['g', 'Acceleration'],
-      ['twr', 'Thrust'],
-      ['fuel', 'Propellant'],
-      ['ec', 'Charge'],
-      ['met', 'Mission time'],
-      ['date', 'Date (UTC)'],
-    ];
     const right = h('div', { class: 'hud-right pe' }, h('div', { class: 'hud-row-head' }, this.speedLabel));
-    for (const [id, label] of rows) {
-      const r = row(label);
+    for (const [id, label, tip, core] of ROWS) {
+      const r = row(label, tip);
+      if (!core) r.el.classList.add('hud-row--extra');
       this.values.set(id, r.value);
       right.append(r.el);
     }
+    // The short list is what a flight to orbit needs; the rest is one click away and the choice is remembered.
+    const more = button({ label: '', variant: 'quiet', tip: 'Show every readout, or only the essentials', onClick: () => setDetail(!right.classList.contains('is-full')) }) as HTMLButtonElement;
+    more.classList.add('hud-more');
+    const setDetail = (full: boolean): void => {
+      right.classList.toggle('is-full', full);
+      more.textContent = full ? 'Less ▴' : 'More ▾';
+      try {
+        localStorage.setItem(HUD_DETAIL_KEY, full ? '1' : '0');
+      } catch {
+        /* not remembered */
+      }
+    };
+    let full = false;
+    try {
+      full = localStorage.getItem(HUD_DETAIL_KEY) === '1';
+    } catch {
+      /* storage blocked: the short list */
+    }
+    setDetail(full);
+    right.append(more);
 
     const top = h(
       'div',
       { class: 'hud-top pe' },
       button({ label: '← Menu', variant: 'quiet', tip: 'Pause menu (Esc)', onClick: () => actions.pause() }),
+      this.guideButton,
+      button({ label: 'How to play', variant: 'quiet', tip: 'What everything on this screen means, and how to reach orbit', onClick: () => actions.help() }),
       h('span', { class: 'hud-spacer' }),
       this.cheatBadge,
       h('button', { class: 'hud-chip-button', type: 'button', tip: 'Change camera (C)', onclick: () => actions.cycleCamera() }, this.cameraLabel),
@@ -195,6 +227,10 @@ export class FlightHud {
     while (this.messages.childElementCount > 5) this.messages.firstElementChild?.remove();
     setTimeout(() => el.classList.add('is-leaving'), 5200);
     setTimeout(() => el.remove(), 5800);
+  }
+
+  setGuideOn(on: boolean): void {
+    this.guideButton.classList.toggle('is-on', on);
   }
 
   setCheatBadge(on: boolean): void {

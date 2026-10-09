@@ -1,9 +1,9 @@
 import { AmbientLight, MathUtils, PerspectiveCamera, PMREMGenerator, Quaternion, Scene, Vector3 } from 'three/webgpu';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EngineSound } from '../audio/engine-sound';
-import { craftBounds, newCraft, type Craft } from '../builder/craft';
+import { craftBounds, type Craft } from '../builder/craft';
 import { HangarEditor } from '../builder/editor';
-import { EXAMPLES } from '../builder/examples';
+import { starterCraft } from '../builder/examples';
 import { PartFactory } from '../builder/part-meshes';
 import type { AppContext, GameScene, SceneParams } from '../core/scene-manager';
 import { DEFAULT_SITE } from '../data/sites';
@@ -40,10 +40,12 @@ import { HintCard } from '../ui/hint-card';
 import { isModalOpen } from '../ui/kit/modal';
 import { openSaveManager } from '../ui/menu/save-manager';
 import { openPauseMenu } from '../ui/flight/pause-menu';
+import { openHowToPlay } from '../ui/help/how-to-play';
 import { openSettings } from '../ui/settings/settings-panel';
 import type { FlightExtras } from '../save/flight-state';
 import { cheatActions, currentFlags } from './flight-cheats';
 import { collectOverlayInfo } from './flight-diagnostics';
+import { FlightGuide } from './flight-guide';
 import { FlightSaves } from './flight-saves';
 import { fitFlightDepth, fitMapDepth, MAP_FAR } from './flight-depth';
 import { drainFlightEvents } from './flight-events';
@@ -88,6 +90,7 @@ export class FlightScene implements GameScene {
   private disposers: Array<() => void> = [];
 
   private readonly stepper: Stepper = { accumulator: 0 };
+  private lastStageAt = 0;
   private hudTimer = 0;
   private ballTimer = 0;
   private initialFuel = 1;
@@ -98,6 +101,7 @@ export class FlightScene implements GameScene {
   private readonly vesselWorld = new Vector3();
   private lost = false;
   private hints!: HintCard;
+  private guide!: FlightGuide;
   private saves!: FlightSaves;
   private overlay = createDebugOverlay(null);
   private overlayTimer = 0;
@@ -143,6 +147,7 @@ export class FlightScene implements GameScene {
     this.sound = new EngineSound(ctx.audio);
     ctx.music.setMood('flight');
     this.hints = new HintCard(ctx.settings);
+    this.guide = new FlightGuide(ctx);
     this.hud = new FlightHud({
       stage: () => this.command('stage'),
       toggleSas: () => this.command('sas'),
@@ -157,9 +162,11 @@ export class FlightScene implements GameScene {
       pause: () => this.pauseMenu(),
       mute: () => this.hud.message(ctx.audio.toggleMute() ? 'Sound off' : 'Sound on'),
       toggleMap: () => this.toggleMap(),
+      toggleGuide: () => this.guide.toggle(),
+      help: () => !isModalOpen() && openHowToPlay(ctx),
     });
     this.overlay.show(false);
-    ui.append(this.hud.root, this.hints.root, this.overlay.root);
+    ui.append(this.hud.root, this.guide.panel.root, this.hints.root, this.overlay.root);
     this.nav = new Navigator(() => this.world);
     this.saves = new FlightSaves({
       ctx,
@@ -219,7 +226,7 @@ export class FlightScene implements GameScene {
 
   private craft(): Craft {
     const saved = HangarEditor.restore(localStorage);
-    return saved && saved.parts.length > 0 ? saved : EXAMPLES[0]?.build() ?? newCraft();
+    return saved && saved.parts.length > 0 ? saved : starterCraft();
   }
 
   /** (Re)start the flight: a fresh world with the craft on the pad, at about 8:30 local solar time. */
@@ -234,6 +241,7 @@ export class FlightScene implements GameScene {
     const up = vnorm(this.pad.frame.center);
     this.launchCraft = this.craft();
     this.everLiftedOff = false;
+    this.guide.reset();
     const v = this.world.launch(this.launchCraft, { direction: up, headingDeg: DEFAULT_SITE.heading });
     v.sas.enabled = this.ctx.settings.get().gameplay.sasDefault;
     this.initialFuel = Math.max(1, v.parts.reduce((s, p) => s + (p.def.propellant?.kind === 'solid' ? 0 : p.fuel), 0));
@@ -246,7 +254,6 @@ export class FlightScene implements GameScene {
     this.effects.clear();
     this.lighting.snap = true;
     this.hud.setBanner(null);
-    this.hud.message('On the pad. Shift raises the throttle, Space lights the engines.');
   }
 
   /** Size the tower and the pad camera to the rocket. */
@@ -289,6 +296,12 @@ export class FlightScene implements GameScene {
   private command(cmd: Parameters<typeof applyCommand>[2]): void {
     const v = this.world.active;
     if (!v) return;
+    if (cmd === 'stage') {
+      // A double tap (or a held key repeating) must not throw away the stage that has only just lit.
+      const now = performance.now();
+      if (now - this.lastStageAt < 700) return;
+      this.lastStageAt = now;
+    }
     const msg = applyCommand(this.world, v, cmd);
     if (msg) this.hud.message(msg);
   }
@@ -443,10 +456,11 @@ export class FlightScene implements GameScene {
   private updateHints(dt: number, modal: boolean): void {
     this.hintTimer -= dt;
     if (this.hintTimer > 0 || modal) return;
-    this.hintTimer = 0.6;
+    this.hintTimer = 0.3;
+    const covered = this.guide.covers;
     const s = hintState(this.world, this.nav, {
       enabled: this.ctx.settings.get().gameplay.hints,
-      seen: this.hints.seen,
+      seen: covered.length > 0 ? new Set([...this.hints.seen, ...covered]) : this.hints.seen,
       busy: this.hints.busy,
       mapOpen: this.map.active,
       enteredSoi: this.enteredSoi,
@@ -454,6 +468,8 @@ export class FlightScene implements GameScene {
       everLiftedOff: this.everLiftedOff,
     });
     this.enteredSoi = false;
+    this.guide.update(this.world, s, this.map.active);
+    this.hud.setGuideOn(this.guide.enabled);
     const id = s ? nextHint(s) : null;
     if (id) {
       this.hints.show(id);
@@ -561,6 +577,7 @@ export class FlightScene implements GameScene {
     this.input?.dispose();
     this.sound?.dispose();
     this.hud?.root.remove();
+    this.guide?.panel.root.remove();
     this.map?.dispose();
     this.views?.dispose();
     this.effects?.dispose();

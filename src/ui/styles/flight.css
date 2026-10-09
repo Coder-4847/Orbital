@@ -593,3 +593,189 @@
 .hint-card--bottom.is-on {
   transform: translate(-50%, 0);
 }
+
+/* --- flight guide: what to do next --- */
+.guide-card {
+  position: absolute;
+  left: 1rem;
+  top: 3.6rem;
+  width: min(23rem, calc(100vw - 2rem));
+  padding: 0.7rem 0.9rem 0.8rem;
+  background: var(--surface);
+  border: 1px solid rgba(154, 215, 255, 0.28);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(12px);
+  opacity: calc(var(--hud-opacity));
+  display: none;
+}
+
+.guide-card.is-on {
+  display: block;
+}
+
+.guide-card.is-new {
+  animation: guide-new 900ms var(--ease);
+}
+
+@keyframes guide-new {
+  from {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  to {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+
+.guide-head {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.guide-kicker {
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.guide-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.guide-icon:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.guide-phases {
+  display: flex;
+  gap: 0.15rem;
+  margin: 0.45rem 0 0.6rem;
+  padding: 0;
+  list-style: none;
+}
+
+.guide-phase {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.02em;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.guide-dot {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+
+.guide-phase.is-done {
+  color: var(--text-dim);
+}
+
+.guide-phase.is-done .guide-dot {
+  background: rgba(154, 215, 255, 0.5);
+}
+
+.guide-phase.is-now {
+  color: var(--accent);
+}
+
+.guide-phase.is-now .guide-dot {
+  background: var(--accent);
+}
+
+.guide-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.guide-text {
+  margin: 0.3rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.guide-status {
+  margin-top: 0.55rem;
+  font-size: 0.72rem;
+  color: var(--accent);
+}
+
+.guide-bar {
+  margin-top: 0.3rem;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.guide-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 300ms linear;
+}
+
+kbd.key {
+  display: inline-block;
+  min-width: 1.5em;
+  padding: 0 0.4em;
+  margin: 0 0.1em;
+  font-size: 0.86em;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--accent);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+}
+
+/* Hints sit on the right, so they never cover the guide. */
+.hint-card {
+  left: auto;
+  right: 1rem;
+}
+
+.flight-hud.is-hidden ~ .guide-card {
+  display: none;
+}
+
+/* --- readouts: the short list by default --- */
+.hud-right:not(.is-full) .hud-row--extra {
+  display: none;
+}
+
+.hud-more {
+  align-self: flex-end;
+  margin-top: 0.2rem;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.68rem;
+}
+
+.hud-right:not(.is-full) .hud-row {
+  font-size: 0.8rem;
+}
+
+/* The map has its node panel on the right and no guide on the left. */
+.flight-hud.in-map ~ .hint-card {
+  left: 1rem;
+  right: auto;
+}

@@ -22,7 +22,7 @@ import { craftBounds, getPart } from '../builder/craft';
 import { CraftRepository } from '../builder/craft-store';
 import type { Placement } from '../builder/edit';
 import { HangarEditor, type Tool } from '../builder/editor';
-import { EXAMPLES } from '../builder/examples';
+import { starterCraft } from '../builder/examples';
 import { createToolbar, toast } from '../builder/hangar-dialogs';
 import { createPalette, createStagingPanel, createStatsPanel, type Panel } from '../builder/hangar-panels';
 import { CraftView } from '../builder/hangar-view';
@@ -94,7 +94,7 @@ export class HangarScene implements GameScene {
     this.view = new CraftView(factory);
     this.scene.add(this.view.root);
 
-    this.editor = new HangarEditor(HangarEditor.restore(localStorage) ?? EXAMPLES[0]!.build(), localStorage);
+    this.editor = new HangarEditor(HangarEditor.restore(localStorage) ?? starterCraft(), localStorage);
     this.editor.setUnlimited(ctx.cheats.get().unlimitedBuild);
     this.ctx = ctx;
     ctx.music.setMood('hangar');

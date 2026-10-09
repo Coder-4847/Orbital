@@ -17,7 +17,7 @@ export interface Settings {
   graphics: GraphicsSettings;
   audio: { master: number; effects: number; ambience: number; music: number };
   controls: { mouseSensitivity: number; invertY: boolean; gamepad: boolean; gamepadDeadzone: number; bindings: Bindings };
-  gameplay: { units: 'metric' | 'imperial'; tooltips: boolean; hints: boolean; sasDefault: boolean; autoWarpSafety: boolean };
+  gameplay: { units: 'metric' | 'imperial'; tooltips: boolean; hints: boolean; guide: boolean; sasDefault: boolean; autoWarpSafety: boolean };
   interface: { uiScale: number; hudOpacity: number };
 }
 
@@ -28,7 +28,7 @@ export const DEFAULT_SETTINGS: Settings = {
   graphics: { preset: DEFAULT_PRESET, ...QUALITY_PRESETS[DEFAULT_PRESET], fov: 55, frameCap: 0, backend: 'auto' },
   audio: { master: 0.8, effects: 1, ambience: 0.8, music: 0.6 },
   controls: { mouseSensitivity: 1, invertY: false, gamepad: true, gamepadDeadzone: 0.12, bindings: { ...DEFAULT_BINDINGS } },
-  gameplay: { units: 'metric', tooltips: true, hints: true, sasDefault: true, autoWarpSafety: true },
+  gameplay: { units: 'metric', tooltips: true, hints: true, guide: true, sasDefault: true, autoWarpSafety: true },
   interface: { uiScale: 1, hudOpacity: 1 },
 };
 

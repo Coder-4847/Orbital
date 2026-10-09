@@ -2,6 +2,7 @@ import { Group, MathUtils, PerspectiveCamera, Vector3 } from 'three/webgpu';
 import type { AppContext, GameScene } from '../core/scene-manager';
 import { createDemoRocket } from '../render/demo-rocket';
 import { SPACE_FAR, SpaceView } from '../render/space-view';
+import { openHowToPlay } from '../ui/help/how-to-play';
 import { openAbout } from '../ui/menu/dialogs';
 import { openSaveManager } from '../ui/menu/save-manager';
 import { buildMainMenu } from '../ui/menu/main-menu';
@@ -54,6 +55,7 @@ export class MenuScene implements GameScene {
         { id: 'hangar', label: 'Hangar', onSelect: () => void ctx.scenes.goto('hangar') },
         { id: 'explorer', label: 'Explorer', onSelect: () => void ctx.scenes.goto('explorer') },
         { id: 'load', label: 'Load game', onSelect: () => openSaveManager(ctx, { onLoad: (s) => void ctx.scenes.goto('flight', { saveId: s.id }) }) },
+        { id: 'help', label: 'How to play', onSelect: () => openHowToPlay(ctx) },
         { id: 'settings', label: 'Settings', onSelect: () => openSettings(ctx) },
         { id: 'about', label: 'About', onSelect: () => openAbout(ctx) },
       ],

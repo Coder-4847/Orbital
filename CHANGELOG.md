@@ -2,6 +2,18 @@
 
 Newest first. One line per notable change.
 
+## 1.1.0 — Launch site, graphics and a guide to flying
+- Fixed: **the launch pad stood on a round sand island in the open sea.** The baked heightmap has one grey step per ~35 m and the bake treats anything under about 70 m as ocean, so Florida and the whole coastal plain of the south-east United States were missing; only the levelled disc under the pad stood above the water. `terrain/lowlands.ts` adds hand-traced outlines of low plains (Mobile to Virginia Beach, with Lake Okeechobee) that `EarthSource` turns into low, humid land with a fractal coast, dunes, lagoons and a proper shelf offshore. Other low coasts of the world are still missing (see MEMORY, section 8).
+- Fixed: **the launch complex was visible from space** (drawn out to 300 km, on a bright disc). It is now drawn within 60 km only, and its ground no longer contrasts with the land around it.
+- Launch complex rebuilt: octagonal hardstand on a gravel apron, perimeter road, four lightning masts, flood-light towers, a water tower, horizontal tanks, a crawlerway to a vehicle assembly building with a launch-control wing, and 1,500 scrub bushes for a sense of scale.
+- Earth surface: vegetation is patchy at 25 km and 3 km scales (direction-based noise, never tiles); the coarse detail no longer shows as a grid from the air (two non-commensurate scales that fade out sooner); sand is a strip at the waterline instead of everything under 10 m.
+- Engine plumes: lathe-shaped shells that fade at their silhouette, with streaming knots and shock diamonds at sea level, instead of two hard cones.
+- **Flight guide** (`flight/guide.ts`, `ui/flight/guide-panel.ts`, `scenes/flight-guide.ts`): a card that is always on screen in flight and says the one thing to do next with the player's own key names: throttle, lift off, climb, lean over (with the nose angle to aim for right now), stage, gain speed (steering by vertical speed), orbit, then deorbit, re-entry, parachutes and landing. A row of phases shows where the flight is. Switch in the HUD top bar and in Settings; the hints it makes redundant are suppressed while it is on.
+- **How to play** pages (main menu, pause menu, HUD, the guide's ? button): what the game is, a first flight step by step, what every part of the screen means, the map, coming home and a glossary.
+- HUD readouts show a short list by default (altitude, vertical speed, apoapsis, periapsis, time to apoapsis, attitude, propellant) with More for the rest; every row has a tooltip that explains it.
+- New default rocket **Pathfinder** (`starterCraft`): thrust-to-weight about 1.25, about 11 km/s of delta-v, heat shield and both parachutes on a capsule that separates. Sparrow-1 reached orbit only with near-perfect steering and had no heat shield. A double tap on Stage within 0.7 s no longer drops the stage that has just lit.
+- Tests: 281. `tests/guide.test.ts` checks the guide's rules and flies the starter rocket to orbit with three simulated clumsy players who only do what the guide says.
+
 ## 1.0.0 — Phase 8: optimisation, bug fixes and release
 - Memory: terrain chunks now drop their CPU copy of the vertex data once the renderer has uploaded it (`TerrainBody.releaseUploaded`, `render/uploaded.ts`), and Earth chunks no longer keep the `aSurfB` attribute their material never reads. JavaScript heap in flight at High went from about 830 MB to 575 MB (Medium about 400 MB).
 - Bundle: three.js is its own cacheable chunk (about 960 kB, 262 kB gzipped); the application entry is 33 kB. Everything still loads from relative URLs.

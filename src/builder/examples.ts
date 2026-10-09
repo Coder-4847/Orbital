@@ -31,6 +31,32 @@ function sparrow(): Craft {
 }
 
 /**
+ * The rocket a new player flies first: orbit and back with fuel to spare. A capsule with both parachutes and a heat shield on
+ * its own decoupler, a long 1.25 m upper stage, and a first stage with a modest thrust-to-weight (about 1.25), so the climb is
+ * slow enough to steer by hand. A hand-flown ascent with late, coarse steering still reaches orbit (tests/guide.test.ts).
+ */
+function pathfinder(): Craft {
+  const { craft, root } = startCraft('Pathfinder trainer', 'pod-capsule');
+  above(craft, above(craft, root, 'chute-main'), 'chute-drogue');
+  const shield = below(craft, root, 'shield-125');
+  const dropCapsule = below(craft, shield, 'dec-125'); // the capsule comes home alone
+  const upper1 = below(craft, dropCapsule, 'tank-125-4');
+  const upper2 = below(craft, upper1, 'tank-125-2');
+  const upperEngine = below(craft, upper2, 'eng-vacuum-110');
+  const dec = below(craft, upperEngine, 'dec-125');
+  const widen = below(craft, dec, 'adapter-125-250');
+  const t1 = below(craft, widen, 'tank-250-8');
+  const t2 = below(craft, t1, 'tank-250-4');
+  const narrow = belowVia(craft, t2, 'adapter-125-250', 'bottom');
+  belowVia(craft, narrow, 'eng-sea-850', 'top', 'top');
+  radial(craft, t2, 'fin-large', 4, yOf(craft, t2) - 0.4);
+  return finish(craft);
+}
+
+/** The craft a flight starts with when the player has not built one. */
+export const starterCraft = (): Craft => pathfinder();
+
+/**
  * The part of the Moon mission that goes to the Moon and back: capsule with heat shield, a service module with the ascent
  * engine, a descent stage with legs, and a transfer stage. Returns the id of its lowest part (the transfer engine).
  */
@@ -105,6 +131,7 @@ function titanTug(): Craft {
 
 export const EXAMPLES: ExampleCraft[] = [
   { id: 'sparrow', title: 'Sparrow-1: basic orbital rocket', blurb: 'Two stages, fins, parachute: a first rocket for low Earth orbit.', build: sparrow },
+  { id: 'pathfinder', title: 'Pathfinder: first flight trainer', blurb: 'Forgiving two-stage rocket with fuel to spare, a heat shield and both parachutes: to orbit and back, following the flight guide.', build: pathfinder },
   { id: 'selene', title: 'Selene: complete Moon mission', blurb: 'A 950 t two-stage launcher under a transfer stage, a lander with legs, and a capsule with a heat shield for the trip home.', build: selene },
   { id: 'selene-module', title: 'Selene module: Moon stack without a launcher', blurb: 'The 40 t part of Selene that does the Moon trip. Start it in orbit from the pause menu, or build your own launcher.', build: seleneModule, orbitOnly: true },
   { id: 'atlas', title: 'Atlas: heavy interplanetary stack', blurb: 'Solid boosters, a heavy core, a 2.5 m transfer stage and an ion tug for deep space.', build: titanTug },
