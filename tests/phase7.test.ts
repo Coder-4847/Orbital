@@ -9,7 +9,8 @@ describe('units', () => {
   it('formats metric distances and speeds', () => {
     expect(formatLength(850)).toBe('850.0 m');
     expect(formatLength(12_340)).toBe('12.3 km');
-    expect(formatLength(3.84e8)).toBe('384.00 Mm');
+    expect(formatLength(3.84e8)).toBe('384,000 km');
+    expect(formatLength(-5.36e6)).toBe('-5,360 km');
     expect(formatLength(2e11)).toBe('1.337 AU');
     expect(formatSpeed(42.5)).toBe('42.5 m/s');
     expect(formatSpeed(7790)).toBe('7.79 km/s');

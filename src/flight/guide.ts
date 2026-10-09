@@ -23,6 +23,9 @@ export interface GuideState extends HintState {
   bodyName: string;
   /** Propellant left as a fraction of the launch load (0..1). */
   fuelLeft: number;
+  /** Speed around the body (m/s, the HUD's ORB figure) and the speed a circular orbit at this height needs. */
+  orbitSpeed: number;
+  circularSpeed: number;
 }
 
 export const ASCENT_PHASES = ['Launch', 'Climb', 'Lean over', 'Gain speed', 'Orbit'] as const;
@@ -73,9 +76,10 @@ export function ascentPitch(altitude: number, verticalSpeed: number): number {
 }
 
 const km = (m: number): string => `${Math.round(m / 1000)} km`;
+const kms = (ms: number): string => `${(ms / 1000).toFixed(1)} km/s`;
 
-/** The step that fits this moment. `fmt` formats a length in the player's units. */
-export function guide(s: GuideState, fmt: (metres: number) => string = km): GuideView {
+/** The step that fits this moment. `fmt` formats a length and `fmtSpeed` a speed in the player's units. */
+export function guide(s: GuideState, fmt: (metres: number) => string = km, fmtSpeed: (ms: number) => string = kms): GuideView {
   const ascent = (id: GuideStepId, phase: number, title: string, text: string, status?: string, progress?: number): GuideView => ({ id, phases: ASCENT_PHASES, phase, title, text, status, progress });
   const home = (id: GuideStepId, phase: number, title: string, text: string, status?: string, progress?: number): GuideView => ({ id, phases: RETURN_PHASES, phase, title, text, status, progress });
 
@@ -154,10 +158,14 @@ export function guide(s: GuideState, fmt: (metres: number) => string = km): Guid
     );
   }
   const why = s.verticalSpeed <= 0 ? 'You are sinking: raise the nose until Vertical speed is positive again.' : s.verticalSpeed > 150 ? 'You are still climbing fast, so nearly all the thrust can go sideways.' : 'Vertical speed is low: hold the nose steady so you neither climb nor sink.';
+  // Periapsis sits far below the ground for almost the whole burn and only comes up in the last seconds: say so, and give the
+  // player the figure that does move steadily, their speed around the Earth.
+  const speedNow = `Speed ${fmtSpeed(s.orbitSpeed)} of ${fmtSpeed(s.circularSpeed)}`;
+  const peNote = s.periapsis < 0 ? ` Periapsis says "underground" until the last seconds: that is normal. Watch your speed reach ${fmtSpeed(s.circularSpeed)} and keep Apoapsis near ${fmt(HOLD_ALTITUDE)}.` : '';
   return ascent(
     'speed', 3, 'Gain speed for orbit',
-    `${idle}${steer} ${why} Keep burning until Periapsis is above ${fmt(peTarget)}, then cut the engine with {throttleCut}.`,
-    s.periapsis < 0 ? 'Periapsis is still below the ground' : `Periapsis ${fmt(s.periapsis)} of ${fmt(peTarget)}`, Math.min(1, Math.max(0, s.speed / 7600)),
+    `${idle}${steer} ${why}${peNote} Then cut the engine with {throttleCut}, once Periapsis is above ${fmt(peTarget)}.`,
+    s.periapsis < 0 ? speedNow : `${speedNow} · Periapsis ${fmt(s.periapsis)} of ${fmt(peTarget)}`, clamp(s.orbitSpeed / s.circularSpeed, 0, 1),
   );
 }
 

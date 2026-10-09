@@ -2,6 +2,11 @@
 
 Newest first. One line per notable change.
 
+## 1.1.2 — The numbers during the orbit burn no longer look like a failure
+- Found by the owner: with apoapsis at 106 km the Periapsis read "-5.4 Mm" and the flight looked lost. Flying the guide in the browser gave exactly those numbers: during the whole "Gain speed" burn the apoapsis sits near 106-108 km and the periapsis stays about -5 Mm underground, then jumps to +90 km in the last 5 seconds. It was correct physics but nothing said so.
+- The "Gain speed for orbit" card now says Periapsis reading "underground" is normal until the last seconds, and its status line and bar show the figure that does move steadily: speed around the Earth against the speed a circular orbit needs ("Speed 4.0 km/s of 7.9 km/s"). It used to show a bar from surface speed over a fixed 7.6 km/s.
+- The HUD Periapsis reads "underground" instead of a negative distance; distances of thousands of km read "5,360 km" instead of "5.36 Mm" (the debug overlay still uses Mm). How to play no longer says to "watch Periapsis climb".
+
 ## 1.1.1 — The first orbit no longer runs out of fuel
 - Fixed: **players ran out of fuel on the periapsis step and could not reach orbit.** Two causes. (1) Above 55 km the guide asked for a nose angle that kept the rocket climbing at about 900 m/s instead of building sideways speed; it now holds the altitude near 110 km (`ascentPitch`: lower the nose while climbing fast, down to 5 degrees below the horizon, raise it when sinking). (2) Pathfinder had a weak 110 kN upper stage and only about 1 t of fuel to spare; it is now a 2.5 m rocket (Titan-2500 under three tanks, Vac-600 upper stage) with 4 to 7 t to spare for the careful, average and clumsy simulated players. In the browser, flown by a script that only reads the guide, the Pathfinder reaches an 86 x 600 km orbit.
 - The guide warns when fuel is almost gone and the orbit is not made, and says to restart; the orbit step needs the periapsis 3 km clear of the air so cutting the engine at once is safe; the descent step no longer flickers to "Re-entry" at touchdown.

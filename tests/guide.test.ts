@@ -14,7 +14,7 @@ const base: GuideState = {
   altitude: 12, agl: 8, speed: 0, verticalSpeed: 0, apoapsis: 12, periapsis: -6.36e6, atmosphereTop: 80_000,
   throttle: 0, thrust: 0, stageWaiting: true, hullHeat: 0, hasChutes: true, chutesArmed: false, hasLegs: false, legsOut: false,
   mapOpen: false, hasNode: false, nodeSoon: false, enteredSoi: false, atRealTime: true, everLiftedOff: false,
-  pitchDeg: 90, timeToApoapsis: 0, reachedOrbit: false, fuelLeft: 1,
+  pitchDeg: 90, timeToApoapsis: 0, reachedOrbit: false, fuelLeft: 1, orbitSpeed: 465, circularSpeed: 7900,
 };
 const at = (over: Partial<GuideState>) => guide({ ...base, ...over });
 const flying: Partial<GuideState> = { situation: 'flying', everLiftedOff: true, throttle: 1, thrust: 8e5, met: 30 };
@@ -54,6 +54,18 @@ describe('flight guide', () => {
     expect(at({ ...back, altitude: 4000, agl: 4000, speed: 60, verticalSpeed: -50, chutesArmed: true }).id).toBe('descent');
     expect(at({ ...back, altitude: 800, agl: 800, speed: 15, verticalSpeed: -10, hasChutes: false }).id).toBe('descent');
     expect(at({ ...back, situation: 'rest', altitude: 3, agl: 0, speed: 0 }).id).toBe('landed');
+  });
+
+  it('explains the underground periapsis and shows speed progress while gaining speed', () => {
+    const burn: Partial<GuideState> = { ...flying, altitude: 100_000, verticalSpeed: 100, pitchDeg: 0, apoapsis: 106_000, periapsis: -5_400_000, orbitSpeed: 4000, circularSpeed: 7800 };
+    const v = at(burn);
+    expect(v.id).toBe('speed');
+    expect(v.text).toContain('underground');
+    expect(v.status).toBe('Speed 4.0 km/s of 7.8 km/s');
+    expect(v.progress).toBeCloseTo(4000 / 7800, 3);
+    const late = at({ ...burn, periapsis: 40_000, orbitSpeed: 7600 });
+    expect(late.text).not.toContain('underground');
+    expect(late.status).toContain('Periapsis 40 km of 85 km');
   });
 
   it('has something to say near other bodies', () => {

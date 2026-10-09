@@ -76,7 +76,7 @@ const ROWS: ReadonlyArray<readonly [string, string, string, boolean]> = [
   ['agl', 'Above ground', 'Height above the ground right under you. The one to watch when landing.', false],
   ['vs', 'Vertical speed', 'How fast you are going up (+) or coming down (-).', true],
   ['ap', 'Apoapsis', 'The highest point of your path. Burn prograde (the way you are going) to raise it.', true],
-  ['pe', 'Periapsis', 'The lowest point of your path. Above the atmosphere (80 km on Earth) means a stable orbit; negative means the path hits the ground.', true],
+  ['pe', 'Periapsis', 'The lowest point of your path. Above the atmosphere (80 km on Earth) means a stable orbit. "Underground" means the path still dips below the ground: normal on the way up, it only clears at the end of the burn.', true],
   ['tap', 'To apoapsis', 'Time until you reach the highest point: the place to burn to raise the periapsis.', true],
   ['tpe', 'To periapsis', 'Time until you reach the lowest point of your path.', false],
   ['inc', 'Inclination', 'Tilt of your orbit against the equator.', false],
@@ -261,7 +261,8 @@ export class FlightHud {
     set('agl', formatLength(s.agl, s.units));
     set('vs', `${s.verticalSpeed >= 0 ? '+' : ''}${formatSpeed(s.verticalSpeed, s.units)}`);
     set('ap', o.bound ? formatLength(o.apoapsis, s.units) : 'escape');
-    set('pe', formatLength(o.periapsis, s.units));
+    // A path that dips below the ground is just "underground": "-5,360 km" says nothing a player can use.
+    set('pe', o.periapsis < 0 ? 'underground' : formatLength(o.periapsis, s.units));
     set('tap', o.bound ? fmtDuration(o.timeToApoapsis) : '—');
     set('tpe', o.bound ? fmtDuration(o.timeToPeriapsis) : '—');
     set('inc', `${((o.inclination * 180) / Math.PI).toFixed(1)}°`);

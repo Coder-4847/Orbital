@@ -5,13 +5,14 @@ const FT = 3.280839895;
 const MILE = 1609.344;
 const AU = 1.495978707e11;
 
-/** Distances: metres and kilometres (then Mm and Gm), or feet and miles. */
+/** Distances: metres and kilometres (thousands of km written out, then Gm), or feet and miles. */
 export function formatLength(m: number, units: Units = 'metric'): string {
   const a = Math.abs(m);
   if (a >= 1e11) return `${(m / AU).toFixed(3)} AU`;
   if (units === 'metric') {
     if (a >= 1e9) return `${(m / 1e9).toFixed(2)} Gm`;
-    if (a >= 1e6) return `${(m / 1e6).toFixed(2)} Mm`;
+    // "5,360 km" rather than "5.36 Mm": few players know what a megametre is.
+    if (a >= 1e6) return `${Math.round(m / 1e3).toLocaleString('en-US')} km`;
     if (a >= 1e4) return `${(m / 1e3).toFixed(1)} km`;
     if (a >= 1e3) return `${(m / 1e3).toFixed(2)} km`;
     return `${m.toFixed(1)} m`;

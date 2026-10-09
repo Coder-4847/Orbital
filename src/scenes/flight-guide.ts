@@ -1,6 +1,6 @@
 /** Keeps the flight guide card (ui/flight/guide-panel) in step with the flight: which step, whether it shows, the switch in Settings. */
 import type { AppContext } from '../core/scene-manager';
-import { formatLength } from '../core/units';
+import { formatLength, formatSpeed } from '../core/units';
 import type { FlightWorld } from '../flight/flight-world';
 import { guide, GUIDE_COVERS } from '../flight/guide';
 import { guideState } from '../flight/hint-state';
@@ -49,6 +49,6 @@ export class FlightGuide {
     const units = this.ctx.settings.get().gameplay.units;
     // Whole kilometres read better in a sentence than the HUD's "100.0 km".
     const fmt = (m: number): string => (units === 'metric' && Math.abs(m) >= 10_000 && Math.abs(m) < 1e6 ? `${Math.round(m / 1000)} km` : formatLength(m, units));
-    this.panel.update(guide({ ...s, reachedOrbit: this.reachedOrbit }, fmt));
+    this.panel.update(guide({ ...s, reachedOrbit: this.reachedOrbit }, fmt, (ms) => formatSpeed(ms, units)));
   }
 }

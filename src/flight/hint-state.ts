@@ -67,5 +67,5 @@ export function guideState(world: FlightWorld, hint: HintState, reachedOrbit: bo
   const orbit = orbitInfo(v.pos, v.vel, env.mu, env.radius, env.spinAxis);
   const nose = qrot(v.q, [0, 1, 0]);
   const pitch = Math.asin(Math.max(-1, Math.min(1, vdot(nose, horizon(env, v.pos).up))));
-  return { ...hint, pitchDeg: (pitch * 180) / Math.PI, timeToApoapsis: orbit.bound ? orbit.timeToApoapsis : Infinity, reachedOrbit, fuelLeft, bodyName: bodyDef(world.bodyId).name };
+  return { ...hint, pitchDeg: (pitch * 180) / Math.PI, timeToApoapsis: orbit.bound ? orbit.timeToApoapsis : Infinity, reachedOrbit, fuelLeft, bodyName: bodyDef(world.bodyId).name, orbitSpeed: vlen(v.vel), circularSpeed: Math.sqrt(env.mu / vlen(v.pos)) };
 }
