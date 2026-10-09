@@ -1,0 +1,595 @@
+/* Flight HUD: staging and toggles (left), navball cluster (bottom centre), readouts (right), messages (top). */
+
+.flight-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--text);
+}
+
+.hud-top {
+  position: absolute;
+  top: 0.9rem;
+  left: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hud-top .btn {
+  padding: 0.28rem 0.6rem;
+  font-size: 0.78rem;
+}
+
+.hud-spacer {
+  flex: 1;
+}
+
+.hud-chip,
+.hud-chip-button {
+  padding: 0.22rem 0.6rem;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.hud-chip-button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.hud-chip-button:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+
+/* --- left: staging --- */
+.hud-left {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  width: 14.5rem;
+  padding: 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hud-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: 11rem;
+  overflow-y: auto;
+}
+
+.hud-stage {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.25rem 0.45rem;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.hud-stage.is-next {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.hud-stage--empty {
+  color: var(--text-faint);
+}
+
+.hud-stage-n {
+  color: var(--accent);
+}
+
+.hud-stage-button {
+  width: 100%;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+}
+
+.hud-toggles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+}
+
+.hud-toggle {
+  padding: 0.25rem 0.2rem;
+  font-size: 0.7rem;
+}
+
+.hud-toggle.is-on,
+.hud-sas-button.is-on {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* --- centre: navball --- */
+.hud-center {
+  position: absolute;
+  left: 50%;
+  bottom: 0.8rem;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.hud-speed {
+  padding: 0.15rem 0.7rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.hud-ballrow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+}
+
+.navball {
+  border-radius: 50%;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.6));
+}
+
+.hud-throttle-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.throttle {
+  position: relative;
+  width: 1.1rem;
+  height: 7.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.throttle-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to top, #3b82c4, var(--accent));
+}
+
+.throttle-readout {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.hud-sas {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.hud-sas-button {
+  padding: 0.18rem 0.4rem;
+  font-size: 0.66rem;
+}
+
+/* --- right: readouts --- */
+.hud-right {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  width: 15.5rem;
+  padding: 0.65rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.hud-row-head {
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 0.15rem;
+}
+
+.hud-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+}
+
+.hud-label {
+  color: var(--text-dim);
+}
+
+.hud-value {
+  color: var(--text);
+  text-align: right;
+}
+
+/* --- messages and banner --- */
+.hud-messages {
+  position: absolute;
+  top: 3.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.hud-message {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.8rem;
+  background: var(--surface-solid);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  animation: toast-in var(--t-med) var(--ease);
+  transition: opacity var(--t-med) var(--ease);
+}
+
+.hud-message--warn {
+  border-color: #e4b447;
+  color: #f1cf7a;
+}
+
+.hud-message--bad {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.hud-message.is-leaving {
+  opacity: 0;
+}
+
+.hud-banner {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 1.2rem;
+  font-size: 1.05rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--danger);
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+  opacity: 0;
+  transition: opacity var(--t-med) var(--ease);
+}
+
+.hud-banner.is-on {
+  opacity: 1;
+}
+
+@media (max-width: 1100px) {
+  .hud-left {
+    width: 11.5rem;
+  }
+  .hud-right {
+    width: 13rem;
+  }
+  .hud-stages {
+    max-height: 6rem;
+  }
+}
+
+/* --- maneuver banner, hull heat --- */
+.hud-node {
+  position: absolute;
+  top: 3.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.28rem 0.8rem;
+  font-size: 0.75rem;
+  color: #ffa6e6;
+  background: var(--surface);
+  border: 1px solid rgba(255, 122, 217, 0.35);
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity var(--t-med) var(--ease);
+  white-space: nowrap;
+}
+
+.hud-node.is-on {
+  opacity: 1;
+}
+
+.hud-value.is-warn {
+  color: var(--danger);
+}
+
+.flight-hud.in-map .hud-left {
+  display: none;
+}
+
+/* --- flight map: trajectory markers, tools and the node editor --- */
+.map-markers {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.map-marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+  white-space: nowrap;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.95);
+  will-change: transform;
+}
+
+.map-marker.pe {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.map-glyph {
+  flex: none;
+  width: 0.62rem;
+  height: 0.62rem;
+  margin-left: -0.31rem;
+  border: 1.5px solid currentColor;
+  background: rgba(2, 4, 8, 0.55);
+  border-radius: 50%;
+}
+
+.map-marker-text {
+  color: var(--text-dim);
+}
+
+.map-marker--periapsis {
+  color: #7dff8a;
+}
+.map-marker--apoapsis {
+  color: #4fd0ff;
+}
+.map-marker--soi-enter {
+  color: #7dff8a;
+}
+.map-marker--soi-exit {
+  color: #ffb066;
+}
+.map-marker--impact {
+  color: var(--danger);
+}
+.map-marker--closest {
+  color: #ffe066;
+}
+.map-marker--node {
+  color: #ff7ad9;
+}
+.map-marker--node .map-glyph {
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+.map-marker--node.is-selected .map-glyph {
+  background: #ff7ad9;
+}
+.map-marker--soi-enter .map-glyph,
+.map-marker--soi-exit .map-glyph {
+  border-style: dashed;
+}
+.map-marker--vessel {
+  color: #ffffff;
+  z-index: 2;
+}
+.map-marker--vessel .map-glyph {
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  border-left: 0.36rem solid transparent;
+  border-right: 0.36rem solid transparent;
+  border-bottom: 0.7rem solid #fff;
+  width: 0;
+  height: 0;
+  margin-left: -0.36rem;
+}
+
+.map-tools {
+  position: absolute;
+  top: 3.4rem;
+  right: 1rem;
+  width: 19rem;
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+}
+
+.map-tools-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.map-tools .btn {
+  padding: 0.22rem 0.55rem;
+  font-size: 0.74rem;
+}
+
+.map-tools .btn.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.map-status {
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.node-panel {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  width: 25.5rem;
+  padding: 0.7rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--surface);
+  border: 1px solid rgba(255, 122, 217, 0.28);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+}
+
+.node-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.node-row .hud-label {
+  width: 4.2rem;
+  flex: none;
+}
+
+.node-time {
+  width: 6.2rem;
+  flex: none;
+  font-size: 0.78rem;
+}
+
+.node-input {
+  width: 4.4rem;
+  flex: none;
+  padding: 0.18rem 0.35rem;
+  font-size: 0.78rem;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.node-steps {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.node-steps .btn {
+  padding: 0.12rem 0.3rem;
+  font-size: 0.66rem;
+}
+
+.node-summary {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  padding: 0.15rem 0;
+}
+
+.node-actions {
+  flex-wrap: wrap;
+}
+
+.node-actions .btn {
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+}
+
+/* --- hints, cheat badge, debug overlay in flight --- */
+.hint-card {
+  position: absolute;
+  left: 1rem;
+  top: 3.6rem;
+  width: min(22rem, calc(100vw - 2rem));
+  transform: translateY(-0.5rem);
+  padding: 0.85rem 1rem 0.8rem;
+  background: var(--surface);
+  border: 1px solid rgba(154, 215, 255, 0.28);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-med) var(--ease), transform var(--t-med) var(--ease);
+}
+
+.hint-card.is-on {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.hint-title {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.hint-text {
+  margin: 0.35rem 0 0.7rem;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.hint-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.hint-actions .btn {
+  padding: 0.25rem 0.7rem;
+  font-size: 0.76rem;
+}
+
+.hud-cheat {
+  color: #ffd27a;
+  border-color: rgba(255, 210, 122, 0.4);
+  letter-spacing: 0.1em;
+}
+
+.flight-hud.in-map ~ .hint-card {
+  top: 19rem;
+}
+
+.hint-card--bottom {
+  left: 50%;
+  top: auto;
+  bottom: 1.5rem;
+  width: min(30rem, calc(100vw - 2rem));
+  transform: translate(-50%, 0.5rem);
+}
+
+.hint-card--bottom.is-on {
+  transform: translate(-50%, 0);
+}

@@ -1,0 +1,51 @@
+/* Orbital design tokens. One accent colour, hairline borders, near-black surfaces. */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../../assets/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('../../assets/fonts/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+:root {
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+
+  --bg-0: #040609;
+  --bg-1: #080b10;
+  --bg-2: #0d1118;
+  --surface: rgba(9, 12, 18, 0.78);
+  --surface-solid: #0a0d13;
+  --surface-hover: rgba(180, 205, 240, 0.06);
+
+  --line: rgba(190, 212, 245, 0.11);
+  --line-strong: rgba(190, 212, 245, 0.22);
+
+  --text: #e7edf6;
+  --text-dim: #93a0b4;
+  --text-faint: #5d6a7e;
+
+  --accent: #9ad7ff;
+  --accent-dim: rgba(154, 215, 255, 0.16);
+  --danger: #ff8d85;
+
+  --radius: 6px;
+  --radius-lg: 10px;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --t-fast: 140ms;
+  --t-med: 260ms;
+
+  /* Driven by the Interface settings. */
+  --ui-scale: 1;
+  --hud-opacity: 1;
+}

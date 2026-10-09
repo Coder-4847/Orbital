@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#040609" />
+    <meta name="description" content="Orbital — a real-scale spaceflight simulator that runs in your browser." />
+    <meta name="color-scheme" content="dark" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Orbital" />
+    <meta property="og:description" content="Build a rocket, reach orbit and fly the real-scale solar system, in your browser." />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <title>Orbital</title>
+    <style>
+      /* Critical paint before the stylesheet bundle arrives: no white flash. */
+      html, body { margin: 0; background: #040609; color: #93a0b4; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="ui-root"></div>
+    <div id="boot" class="boot"><div class="boot-mark">ORBITAL</div></div>
+    <noscript>
+      <p style="position:fixed;inset:0;display:grid;place-items:center;margin:0;font-family:system-ui,sans-serif">Orbital needs JavaScript enabled.</p>
+    </noscript>
+    <script>
+      // Test hook: ?raf=timer drives animation from timers, for headless/hidden browser panes where rAF is paused.
+      if (/[?&]raf=timer/.test(location.search)) {
+        window.requestAnimationFrame = (cb) => setTimeout(() => cb(performance.now()), 16);
+        window.cancelAnimationFrame = (id) => clearTimeout(id);
+      }
+    </script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

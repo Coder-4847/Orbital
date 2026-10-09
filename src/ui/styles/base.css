@@ -1,0 +1,188 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* All UI sizes are in rem, so the Interface > UI scale setting scales everything. */
+  font-size: calc(16px * var(--ui-scale));
+  background: var(--bg-0);
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg-0);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  user-select: none;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+}
+
+.gfx-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  outline: none;
+}
+
+#ui-root {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+#ui-root > * {
+  pointer-events: none;
+}
+
+.scene-ui {
+  position: absolute;
+  inset: 0;
+  opacity: 1;
+  transition: opacity var(--t-med) var(--ease);
+  animation: ui-in 700ms var(--ease) both;
+}
+
+#ui-root.is-leaving .scene-ui {
+  opacity: 0;
+}
+
+@keyframes ui-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Tabular numerals everywhere numbers are read out. */
+.mono,
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--accent-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Splash and fatal-error cards (used before/without the 3D renderer). */
+.boot {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(ellipse at 50% 120%, #0b1726 0%, var(--bg-0) 60%);
+  z-index: 100;
+  transition: opacity 600ms var(--ease);
+}
+
+.boot.is-done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.boot-mark {
+  font-weight: 200;
+  letter-spacing: 0.6em;
+  padding-left: 0.6em;
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.fatal {
+  max-width: 34rem;
+  margin: 0 1.5rem;
+  padding: 2rem 2.25rem;
+  background: var(--surface-solid);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  user-select: text;
+}
+
+.fatal h1 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.fatal p {
+  margin: 0 0 0.75rem;
+  color: var(--text-dim);
+}
+
+.fatal ul {
+  margin: 0 0 1rem;
+  padding-left: 1.1rem;
+  color: var(--text-dim);
+}
+
+.fatal code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--text);
+}
+
+/* Slim dark scrollbars to match the UI. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(190, 212, 245, 0.25) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(190, 212, 245, 0.22);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}

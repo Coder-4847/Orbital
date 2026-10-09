@@ -1,0 +1,522 @@
+/* Hangar (rocket builder): toolbar, part palette, stats, staging, dialogs. Same tokens as the rest of the UI. */
+
+.hangar-ui {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --panel-top: 4.6rem;
+  --panel-bottom: 2.8rem;
+}
+
+.hangar-panel,
+.hangar-toolbar {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  color: var(--text);
+}
+
+/* --- toolbar --- */
+.hangar-toolbar {
+  position: absolute;
+  top: 0.8rem;
+  left: 14rem;
+  right: 22rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.9rem;
+  padding: 0.35rem 0.6rem;
+}
+
+.tool-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tool-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-right: 0.3rem;
+}
+
+.hangar-toolbar .btn {
+  padding: 0.28rem 0.6rem;
+  font-size: 0.76rem;
+}
+
+.hangar-toolbar .btn[disabled] {
+  opacity: 0.35;
+}
+
+.hangar-toolbar .btn--primary {
+  margin-left: auto;
+}
+
+.hangar-toolbar .segmented button {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.72rem;
+}
+
+/* --- palette --- */
+.hangar-palette {
+  position: absolute;
+  top: var(--panel-top);
+  bottom: var(--panel-bottom);
+  left: 1rem;
+  width: 16.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+}
+
+.hangar-search,
+.hangar-name {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.38rem 0.55rem;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+}
+
+.hangar-search:focus,
+.hangar-name:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.hangar-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.hangar-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.hangar-chip {
+  padding: 0.15rem 0.5rem;
+  font: inherit;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+
+.hangar-chip:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.hangar-chip.is-on {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.hangar-parts {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-right: 0.15rem;
+}
+
+.part-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+.part-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--line-strong);
+}
+
+.part-card.is-active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.part-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.part-meta {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+}
+
+/* --- right column --- */
+.hangar-right {
+  position: absolute;
+  top: var(--panel-top);
+  bottom: var(--panel-bottom);
+  right: 1rem;
+  width: 20rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+.hangar-stats {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.hangar-stats-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.76rem;
+  color: var(--text-dim);
+}
+
+.stat-row .mono {
+  color: var(--text);
+  font-size: 0.72rem;
+  text-align: right;
+}
+
+.stat-row.is-key .mono {
+  color: var(--accent);
+}
+
+.stat-row.is-bad .mono {
+  color: var(--danger);
+}
+
+.stage-table {
+  width: 100%;
+  margin: 0.3rem 0;
+  border-collapse: collapse;
+  font-size: 0.7rem;
+}
+
+.stage-table th {
+  text-align: right;
+  font-weight: 500;
+  color: var(--text-faint);
+  padding: 0.15rem 0.3rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.stage-table th:first-child,
+.stage-table td:first-child {
+  text-align: left;
+}
+
+.stage-table td {
+  text-align: right;
+  padding: 0.18rem 0.3rem;
+  color: var(--text);
+}
+
+.stage-table tr.is-idle td {
+  color: var(--text-faint);
+}
+
+.advice {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+}
+
+.advice--warning {
+  color: var(--danger);
+  border-color: rgba(255, 141, 133, 0.35);
+  background: rgba(255, 141, 133, 0.06);
+}
+
+.hangar-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--line);
+}
+
+.inspector-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.inspector-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.inspector-actions .btn {
+  padding: 0.22rem 0.5rem;
+  font-size: 0.74rem;
+}
+
+.inspector-fill {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.inspector-fill input {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.hint-line {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  line-height: 1.45;
+}
+
+/* --- staging --- */
+.hangar-staging {
+  flex: 0 1 auto;
+  max-height: 42%;
+  overflow-y: auto;
+  padding: 0.65rem 0.75rem;
+}
+
+.staging-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.staging-head .btn {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.72rem;
+}
+
+.staging-head .btn.is-on {
+  color: var(--accent);
+}
+
+.staging-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+
+.stage-box {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+
+.stage-box.is-over {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.stage-title {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  margin-bottom: 0.25rem;
+}
+
+.stage-grip {
+  cursor: grab;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+.stage-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.stage-chip {
+  padding: 0.12rem 0.45rem;
+  font-size: 0.68rem;
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  cursor: grab;
+  user-select: none;
+}
+
+.stage-chip.is-selected {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.stage-new {
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  border-style: dashed;
+}
+
+/* --- bottom hint, toast --- */
+.hangar-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 0.9rem;
+  transform: translateX(-50%);
+  max-width: min(60rem, calc(100vw - 44rem));
+  text-align: center;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  color: var(--text-faint);
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+}
+
+.hangar-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 3.2rem;
+  transform: translateX(-50%);
+  max-width: 34rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: var(--surface-solid);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  animation: toast-in var(--t-med) var(--ease);
+  transition: opacity var(--t-med) var(--ease);
+}
+
+.hangar-toast.is-leaving {
+  opacity: 0;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 0.5rem);
+  }
+}
+
+/* --- dialogs --- */
+.dialog-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-width: min(26rem, 80vw);
+}
+
+.dialog-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.dialog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: min(34rem, 82vw);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.dialog-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.dialog-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.dialog-row-title {
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+/* --- narrow windows: tuck the panels under a two-line toolbar --- */
+@media (max-width: 1100px) {
+  .hangar-ui {
+    --panel-top: 8.2rem;
+  }
+  .hangar-toolbar {
+    left: 1rem;
+    right: 1rem;
+    top: 3.2rem;
+  }
+  .hangar-palette {
+    width: 12rem;
+  }
+  .hangar-right {
+    width: 15rem;
+  }
+  .hangar-hint {
+    display: none;
+  }
+  /* one row down to ~900 px: the symmetry label goes (the 1x, 2x ... buttons say it) and the gaps close up */
+  .hangar-toolbar {
+    gap: 0.35rem 0.6rem;
+  }
+  .tool-group[aria-label='Symmetry'] .tool-label {
+    display: none;
+  }
+}
+
+/* wide enough for a one-row toolbar again: the panels need no second row of room */
+@media (min-width: 1000px) and (max-width: 1100px) {
+  .hangar-ui {
+    --panel-top: 6.4rem;
+  }
+}
