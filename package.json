@@ -1,7 +1,7 @@
 {
   "name": "orbital",
   "private": true,
-  "version": "1.1.2",
+  "version": "1.1.3",
   "type": "module",
   "description": "Orbital — a browser-based 3D spaceflight simulator",
   "scripts": {

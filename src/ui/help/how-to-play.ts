@@ -4,12 +4,14 @@
  * player's own bindings.
  */
 import type { AppContext } from '../../core/scene-manager';
+import { ACTIONS } from '../../core/keymap';
+import { openSettings } from '../settings/settings-panel';
 import { button, tabs } from '../kit/controls';
 import { h, type Child } from '../kit/dom';
 import { openModal, type ModalHandle } from '../kit/modal';
 import { withKeys } from '../flight/guide-panel';
 
-export type HelpTab = 'start' | 'orbit' | 'screen' | 'map' | 'home' | 'words';
+export type HelpTab = 'start' | 'orbit' | 'screen' | 'time' | 'keys' | 'map' | 'home' | 'words';
 
 export function openHowToPlay(ctx: AppContext, initial: HelpTab = 'start'): ModalHandle {
   const bindings = ctx.settings.get().controls.bindings;
@@ -38,8 +40,9 @@ export function openHowToPlay(ctx: AppContext, initial: HelpTab = 'start'): Moda
       ['{stage}', 'Stage: light the engine, and later drop empty stages and light the next.'],
       ['{pitchUp} {pitchDown} {yawLeft} {yawRight}', 'Steer. {rollLeft} and {rollRight} roll.'],
       ['{map}', 'The map: your path around the planet.'],
-      ['{warpUp} / {warpDown}', 'Speed time up / slow it down. {warpReset} returns to real time.'],
+      ['{warpUp} / {warpDown}', 'Speed time up / slow it down. {warpReset} returns to real time. The Time warp tab explains the speeds.'],
     ),
+    p('Every key, as you have set it, is listed under the Keys tab, where you can also change them.'),
   );
 
   const orbit = page(
@@ -68,6 +71,40 @@ export function openHowToPlay(ctx: AppContext, initial: HelpTab = 'start'): Moda
       ['SAS buttons (under the navball)', 'The autopilot for pointing. Hold keeps the nose where it is, Pro points along your path, Ret against it. Mnv points along a planned burn.'],
       ['Readouts (bottom right)', 'Altitude, speed up or down, where the nose points (Attitude), and the two numbers that describe an orbit: Apoapsis (highest point) and Periapsis (lowest point). More shows everything else. Hover over any label for what it means.'],
       ['Top bar', 'Menu, the Guide switch, camera ({camera}), time warp, and the Map ({map}).'],
+    ),
+  );
+
+  const time = page(
+    title('Fast-forwarding time'),
+    p('Coasting takes a long time: one orbit is about 90 minutes and the Moon is three days away. Time warp runs the clock faster. Press {warpUp} to speed up one step, {warpDown} to slow down one step and {warpReset} to go straight back to real time. The arrows in the top bar do the same, and the box between them shows the current speed.'),
+    terms(
+      ['×2, ×3, ×4: physics warp', 'The rocket is still fully simulated, so you can steer and burn while it runs. Handy for waiting out the climb. It is the only kind allowed while an engine is running or you are low.'],
+      ['×10 to ×100,000: rails warp', 'The rocket glides along its orbit and nothing else is simulated, so you cannot steer or burn. This is the one for coasting to the point where you want to act.'],
+    ),
+    title('When it refuses'),
+    p('Rails warp will not start while an engine is running (press {throttleCut} first) or below the top of the air (80 km on Earth, 15 km on bodies without air), because nothing could stop you falling in. The game says why in a message and stays at ×4. If you drop into the air while on rails it slows down by itself.'),
+    title('Coasting to a burn'),
+    steps(
+      ['Cut the engine', 'with {throttleCut} once you are in orbit.'],
+      ['Let the game do it:', 'open the map with {map} and press Ap, Pe, Node or SOI next to "Warp to". It speeds up as far as is useful and slows to real time just before it gets there.'],
+      ['Or do it by hand:', 'press {warpUp} until To apoapsis (in the readouts) is counting down fast, and press {warpDown} or {warpReset} a few seconds early. At ×100 a minute passes in less than a second, so the last steps go quickly.'],
+    ),
+  );
+
+  const keysPage = page(
+    title('Keys'),
+    p('These are your keys right now, taken from your own settings, so they stay correct if you change them.'),
+    h('div', { class: 'help-keys-action' },
+      button({ label: 'Change keys in Settings', variant: 'default', tip: 'Opens Settings on the Controls tab', onClick: () => { modal.close(); openSettings(ctx, 'controls'); } }),
+    ),
+    ...[...new Set(ACTIONS.map((a) => a.group))].flatMap((group): Child[] => [
+      title(group),
+      terms(...ACTIONS.filter((a) => a.group === group).map((a): [string, string] => [a.label, `{${a.id}}`])),
+    ]),
+    title('Mouse and gamepad'),
+    terms(
+      ['Camera', 'Drag with the mouse to turn the view, scroll to zoom. {camera} changes the camera. In the map, drag to turn, scroll to zoom and click a label to focus it.'],
+      ['Gamepad', 'Left stick pitch and yaw, right stick roll, triggers throttle, A stage, X SAS, Y RCS, B legs, bumpers camera and SAS mode. Turn it off in Settings if a stray press stages the rocket.'],
     ),
   );
 
@@ -116,6 +153,8 @@ export function openHowToPlay(ctx: AppContext, initial: HelpTab = 'start'): Moda
       { id: 'start', label: 'Start here', content: start },
       { id: 'orbit', label: 'First orbit', content: orbit },
       { id: 'screen', label: 'The screen', content: screen },
+      { id: 'time', label: 'Time warp', content: time },
+      { id: 'keys', label: 'Keys', content: keysPage },
       { id: 'map', label: 'Map and burns', content: map },
       { id: 'home', label: 'Coming home', content: home },
       { id: 'words', label: 'Glossary', content: words },

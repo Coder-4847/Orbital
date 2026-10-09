@@ -2,6 +2,11 @@
 
 Newest first. One line per notable change.
 
+## 1.1.3 — Time warp and keys in How to play
+- New **Time warp** page in How to play: what the speeds are (×2 to ×4 physics warp, ×10 to ×100,000 rails warp), what each can and cannot do, why rails warp is refused (engine running, or below the top of the air: 80 km on Earth, 15 km elsewhere), and how to coast to a burn (the map's Warp to Ap / Pe / Node / SOI buttons, or the faster and slower warp keys by hand).
+- New **Keys** page in How to play: every flight action with the player's own current key, grouped as in Settings, plus mouse and gamepad, and a button that opens Settings on its Controls tab (where the keys are rebound; that part existed already). `openSettings(ctx, tab)` now takes the tab to open on.
+- Start here points at both pages.
+
 ## 1.1.2 — The numbers during the orbit burn no longer look like a failure
 - Found by the owner: with apoapsis at 106 km the Periapsis read "-5.4 Mm" and the flight looked lost. Flying the guide in the browser gave exactly those numbers: during the whole "Gain speed" burn the apoapsis sits near 106-108 km and the periapsis stays about -5 Mm underground, then jumps to +90 km in the last 5 seconds. It was correct physics but nothing said so.
 - The "Gain speed for orbit" card now says Periapsis reading "underground" is normal until the last seconds, and its status line and bar show the figure that does move steadily: speed around the Earth against the speed a circular orbit needs ("Speed 4.0 km/s of 7.9 km/s"). It used to show a bar from surface speed over a fixed 7.6 km/s.

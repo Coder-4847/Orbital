@@ -685,6 +685,10 @@
   color: var(--text-dim);
 }
 
+.help-keys-action {
+  margin: 0 0 0.4rem;
+}
+
 @media (max-width: 700px) {
   .help-terms {
     grid-template-columns: 1fr;

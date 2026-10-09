@@ -16,11 +16,13 @@ const LEVELS = [
   { value: 3, label: 'Ultra' },
 ];
 
+export type SettingsTab = 'graphics' | 'audio' | 'controls' | 'gameplay' | 'interface';
+
 /**
  * Opens the settings dialog. Controls write straight to the SettingsStore (which persists and notifies);
  * a store subscription re-syncs every control so presets and Reset are reflected immediately.
  */
-export function openSettings(ctx: AppContext): ModalHandle {
+export function openSettings(ctx: AppContext, initialTab: SettingsTab = 'graphics'): ModalHandle {
   const { settings, gfx } = ctx;
   const syncers: Array<(s: Settings) => void> = [];
 
@@ -244,7 +246,7 @@ export function openSettings(ctx: AppContext): ModalHandle {
     { id: 'controls', label: 'Controls', content: controls },
     { id: 'gameplay', label: 'Gameplay', content: gameplay },
     { id: 'interface', label: 'Interface', content: iface },
-  ]);
+  ], initialTab);
 
   const sync = (s: Settings) => syncers.forEach((fn) => fn(s));
   sync(settings.get());
